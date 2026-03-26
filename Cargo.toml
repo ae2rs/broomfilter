@@ -2,6 +2,11 @@
 name = "broomfilter"
 version = "0.1.0"
 edition = "2024"
+description = "A bloom filter that sweeps away your certainty. Probably."
+license = "MIT"
+keywords = ["bloom-filter", "probabilistic", "data-structure", "broom", "maybe"]
+categories = ["data-structures"]
+readme = "README.md"
 
 [[bench]]
 harness = false
@@ -11,6 +16,7 @@ name = "basic"
 bitvec = "1.0.1"
 rand = "0.10.0"
 sha2 = "0.10.9"
+thiserror = "2.0.18"
 xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
 
 [dev-dependencies]

@@ -1,5 +1,5 @@
-use criterion::{Criterion, criterion_group, criterion_main};
 use broomfilter::Filter;
+use criterion::{Criterion, criterion_group, criterion_main};
 use rand::{RngExt, SeedableRng, distr::Alphanumeric};
 use std::hint::black_box;
 
@@ -8,7 +8,7 @@ fn random_string(rng: &mut rand::rngs::SmallRng) -> String {
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
-    let mut filter = Filter::new(100);
+    let mut filter = Filter::new(14, 10000).expect("unable to create filter");
     let mut rng_generator = rand::rngs::SmallRng::seed_from_u64(2);
 
     let random_strings: Vec<String> = (0..4)
@@ -22,7 +22,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         let mut index_group = c.benchmark_group("Index");
         for s in &random_strings {
             index_group.bench_function(format!("index-{s}"), |b| {
-                b.iter(|| filter.index(black_box(&s)))
+                b.iter(|| filter.insert(black_box(&s)))
             });
         }
     }
