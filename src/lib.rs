@@ -3,4 +3,3 @@ mod filter;
 mod hash;
 
 pub use filter::Filter;
-

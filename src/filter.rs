@@ -16,7 +16,9 @@ impl Filter {
         }
 
         if n == 0 {
-            return Err(Error::InvalidArgument("n must be greater than 0".to_string()));
+            return Err(Error::InvalidArgument(
+                "n must be greater than 0".to_string(),
+            ));
         }
 
         let m = 1u64 << size;
