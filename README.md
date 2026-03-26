@@ -1,5 +1,12 @@
 # 🧹 broomfilter 🧹
 
+[![CI](https://github.com/ae2rs/broomfilter/actions/workflows/ci.yml/badge.svg)](https://github.com/ae2rs/broomfilter/actions/workflows/ci.yml)
+[![crates.io](https://img.shields.io/crates/v/broomfilter.svg)](https://crates.io/crates/broomfilter)
+[![docs.rs](https://docs.rs/broomfilter/badge.svg)](https://docs.rs/broomfilter)
+[![Rust](https://img.shields.io/badge/rust-1.85%2B-orange.svg)](https://www.rust-lang.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Downloads](https://img.shields.io/crates/d/broomfilter.svg)](https://crates.io/crates/broomfilter)
+
 > *Sweeping away your certainty, one hash at a time.*
 
 A bloom filter implementation in Rust. Named `broomfilter` because it sweeps
