@@ -1,4 +1,4 @@
-# 🧹 broomfilter 🧹
+# broomfilter
 
 [![CI](https://github.com/ae2rs/broomfilter/actions/workflows/ci.yml/badge.svg)](https://github.com/ae2rs/broomfilter/actions/workflows/ci.yml)
 [![crates.io](https://img.shields.io/crates/v/broomfilter.svg)](https://crates.io/crates/broomfilter)
@@ -7,11 +7,9 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Downloads](https://img.shields.io/crates/d/broomfilter.svg)](https://crates.io/crates/broomfilter)
 
-> *Sweeping away your certainty, one hash at a time.*
+> *A Bloomfilter that sweeps away your certainty, one hash at a time.*
 
-A bloom filter implementation in Rust. Named `broomfilter` because it sweeps
-through your data and tells you "yeah, *probably*" with the confidence of someone
-who definitely didn't study for the exam.
+A bloom filter implementation in Rust. Named `broomfilter` because it .
 
 ---
 

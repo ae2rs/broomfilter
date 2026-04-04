@@ -21,3 +21,12 @@ xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
 
 [dev-dependencies]
 criterion = { version = "0.8", features = ["html_reports"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+fastbloom = "0.17"
+bloomfilter = "3"
+cuckoofilter = "0.5"
+xorf = "0.12"
+qfilter = "0.2"
+bloom = "0.3"
+ethbloom = "0.14"
