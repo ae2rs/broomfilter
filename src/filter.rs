@@ -4,12 +4,15 @@ use crate::hash::hash;
 #[derive(Clone, Debug)]
 pub struct Filter {
     k: u64,
-    mask: u64,
+    m: u64,
+    mask: Option<u64>,
     array: Box<[u64]>,
 }
 
 impl Filter {
     /// Creates a new filter with 2^`size` bits, optimized for `n` expected items.
+    ///
+    /// Uses bitmask indexing for maximum speed.
     pub fn new(size: usize, n: usize) -> Result<Self, Error> {
         if size > 63 {
             return Err(Error::InvalidArgument("max size is 63".to_string()));
@@ -22,15 +25,7 @@ impl Filter {
         }
 
         let m = 1u64 << size;
-        let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
-        let k = k.clamp(1, 30);
-        let words = ((m as usize) + 63) >> 6;
-
-        Ok(Self {
-            k,
-            mask: m - 1,
-            array: vec![0u64; words].into_boxed_slice(),
-        })
+        Self::build(m, n, Some(m - 1))
     }
 
     /// Creates a new filter optimized for `n` expected items with a desired
@@ -41,6 +36,31 @@ impl Filter {
     /// cost of extra memory). Use [`from_fpr_exact`](Self::from_fpr_exact)
     /// for a tighter memory fit with non-power-of-2 sizing.
     pub fn from_fpr(n: usize, fpr: f64) -> Result<Self, Error> {
+        Self::validate_fpr_args(n, fpr)?;
+
+        // m = -n * ln(fpr) / (ln(2)^2), rounded up to next power of 2
+        let m_raw = -(n as f64) * fpr.ln() / (std::f64::consts::LN_2.powi(2));
+        let size = (m_raw.log2().ceil() as usize).max(1);
+
+        Self::new(size, n)
+    }
+
+    /// Creates a new filter optimized for `n` expected items with a desired
+    /// false positive rate `fpr`, using the exact computed bit count instead
+    /// of rounding up to a power of 2.
+    ///
+    /// This uses modulo indexing (slightly slower than bitmask) but wastes
+    /// less memory than [`from_fpr`](Self::from_fpr).
+    pub fn from_fpr_exact(n: usize, fpr: f64) -> Result<Self, Error> {
+        Self::validate_fpr_args(n, fpr)?;
+
+        let m = (-(n as f64) * fpr.ln() / (std::f64::consts::LN_2.powi(2))).ceil() as u64;
+        let m = m.max(2);
+
+        Self::build(m, n, None)
+    }
+
+    fn validate_fpr_args(n: usize, fpr: f64) -> Result<(), Error> {
         if n == 0 {
             return Err(Error::InvalidArgument(
                 "n must be greater than 0".to_string(),
@@ -51,12 +71,28 @@ impl Filter {
                 "fpr must be between 0 and 1 exclusive".to_string(),
             ));
         }
+        Ok(())
+    }
 
-        // m = -n * ln(fpr) / (ln(2)^2), rounded up to next power of 2
-        let m_raw = -(n as f64) * fpr.ln() / (std::f64::consts::LN_2.powi(2));
-        let size = (m_raw.log2().ceil() as usize).max(1);
+    fn build(m: u64, n: usize, mask: Option<u64>) -> Result<Self, Error> {
+        let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
+        let k = k.clamp(1, 30);
+        let words = ((m as usize) + 63) >> 6;
 
-        Self::new(size, n)
+        Ok(Self {
+            k,
+            m,
+            mask,
+            array: vec![0u64; words].into_boxed_slice(),
+        })
+    }
+
+    #[inline]
+    fn index(&self, raw: u64) -> u64 {
+        match self.mask {
+            Some(mask) => raw & mask,
+            None => raw % self.m,
+        }
     }
 
     #[inline]
@@ -64,8 +100,8 @@ impl Filter {
         let (h1, h2) = hash(value);
 
         for i in 0..self.k {
-            let idx = h1.wrapping_add(i.wrapping_mul(h2)) & self.mask;
-            // SAFETY: mask guarantees idx < m, and m <= array.len() * 64.
+            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
+            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
             unsafe {
                 let word = self.array.get_unchecked_mut((idx >> 6) as usize);
                 *word |= 1 << (idx & 63);
@@ -78,8 +114,8 @@ impl Filter {
         let (h1, h2) = hash(value);
 
         for i in 0..self.k {
-            let idx = h1.wrapping_add(i.wrapping_mul(h2)) & self.mask;
-            // SAFETY: mask guarantees idx < m, and m <= array.len() * 64.
+            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
+            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
             unsafe {
                 if *self.array.get_unchecked((idx >> 6) as usize) & (1 << (idx & 63)) == 0 {
                     return false;
@@ -97,7 +133,7 @@ impl Filter {
 
     /// Estimates the number of distinct items currently in the filter.
     pub fn estimated_count(&self) -> f64 {
-        let m = (self.mask + 1) as f64;
+        let m = self.m as f64;
         let bits_set: u64 = self.array.iter().map(|w| w.count_ones() as u64).sum();
         -(m / self.k as f64) * (1.0 - bits_set as f64 / m).ln()
     }
@@ -106,7 +142,7 @@ impl Filter {
     ///
     /// Both filters must have been created with identical parameters.
     pub fn union(&mut self, other: &Filter) -> Result<(), Error> {
-        if self.k != other.k || self.mask != other.mask {
+        if self.k != other.k || self.m != other.m || self.mask != other.mask {
             return Err(Error::InvalidArgument(
                 "filters must have identical parameters".to_string(),
             ));
@@ -288,5 +324,60 @@ mod tests {
         let mut a = Filter::new(10, 100).unwrap();
         let b = Filter::new(12, 100).unwrap();
         assert!(a.union(&b).is_err());
+    }
+
+    #[test]
+    fn from_fpr_exact_no_false_negatives() {
+        let n = 1000;
+        let mut filter = Filter::from_fpr_exact(n, 0.01).unwrap();
+        for i in 0..n {
+            filter.insert(i.to_string());
+        }
+        for i in 0..n {
+            assert!(filter.contains(i.to_string()), "false negative for {i}");
+        }
+    }
+
+    #[test]
+    fn from_fpr_exact_respects_target_rate() {
+        let n = 5000;
+        let target_fpr = 0.01;
+        let mut filter = Filter::from_fpr_exact(n, target_fpr).unwrap();
+        for i in 0..n {
+            filter.insert(format!("member-{i}"));
+        }
+        let test_count = 100_000;
+        let false_positives = (0..test_count)
+            .filter(|i| filter.contains(format!("absent-{i}")))
+            .count();
+        let fpr = false_positives as f64 / test_count as f64;
+        assert!(
+            fpr < target_fpr * 2.0,
+            "FPR {fpr:.4} exceeds 2x target {target_fpr}"
+        );
+    }
+
+    #[test]
+    fn from_fpr_exact_uses_less_memory_than_from_fpr() {
+        let n = 1000;
+        let fpr = 0.01;
+        let exact = Filter::from_fpr_exact(n, fpr).unwrap();
+        let rounded = Filter::from_fpr(n, fpr).unwrap();
+        assert!(exact.array.len() <= rounded.array.len());
+    }
+
+    #[test]
+    fn from_fpr_exact_rejects_invalid_args() {
+        assert!(Filter::from_fpr_exact(0, 0.01).is_err());
+        assert!(Filter::from_fpr_exact(100, 0.0).is_err());
+        assert!(Filter::from_fpr_exact(100, 1.0).is_err());
+    }
+
+    #[test]
+    fn k_is_capped() {
+        let filter = Filter::new(20, 1).unwrap();
+        let mut filter = filter;
+        filter.insert("test");
+        assert!(filter.contains("test"));
     }
 }
