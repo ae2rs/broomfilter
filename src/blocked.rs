@@ -16,6 +16,8 @@ const BLOCK_BITS: u64 = (BLOCK_WORDS as u64) * 64;
 pub struct BlockedFilter {
     k: u64,
     num_blocks: u64,
+    /// `num_blocks - 1` when the block count is a power of 2, `0` otherwise.
+    block_mask: u64,
     array: Box<[u64]>,
 }
 
@@ -39,6 +41,10 @@ impl BlockedFilter {
         let num_blocks = (bits as u64).div_ceil(BLOCK_BITS);
         let num_blocks = num_blocks.max(1);
         let total_words = num_blocks as usize * BLOCK_WORDS;
+        let block_mask = num_blocks
+            .is_power_of_two()
+            .then_some(num_blocks - 1)
+            .unwrap_or(0);
 
         // k is computed from the effective total bits.
         let m = num_blocks * BLOCK_BITS;
@@ -48,7 +54,8 @@ impl BlockedFilter {
         Ok(Self {
             k,
             num_blocks,
-            array: vec![0u64; total_words].into_boxed_slice(),
+            block_mask,
+            array: vec![0; total_words].into_boxed_slice(),
         })
     }
 
@@ -86,7 +93,12 @@ impl BlockedFilter {
     #[inline]
     pub fn insert(&mut self, value: impl AsRef<[u8]>) {
         let (h1, h2) = hash(value);
-        let block_idx = (h1 % self.num_blocks) as usize * BLOCK_WORDS;
+        let block_idx = (if self.block_mask != 0 {
+            h1 & self.block_mask
+        } else {
+            h1 % self.num_blocks
+        }) as usize
+            * BLOCK_WORDS;
         let masks = Self::probe_masks(h1, h2, self.k);
 
         // SAFETY: block_idx is at most (num_blocks - 1) * BLOCK_WORDS,
@@ -101,7 +113,12 @@ impl BlockedFilter {
     #[inline]
     pub fn contains(&self, value: impl AsRef<[u8]>) -> bool {
         let (h1, h2) = hash(value);
-        let block_idx = (h1 % self.num_blocks) as usize * BLOCK_WORDS;
+        let block_idx = (if self.block_mask != 0 {
+            h1 & self.block_mask
+        } else {
+            h1 % self.num_blocks
+        }) as usize
+            * BLOCK_WORDS;
         let masks = Self::probe_masks(h1, h2, self.k);
 
         // SAFETY: same bound as insert.

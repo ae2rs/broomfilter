@@ -33,6 +33,7 @@ Generated from the Criterion benchmark suite in `benches/comparison.rs`. This re
 | **fastbloom** | 0 | 40 | 0.000400 | 2048 bits |
 | bloomfilter | 0 | 75 | 0.000750 | 2048 bits |
 | broomfilter | 0 | 82 | 0.000820 | 2048 bits |
+| broomfilter-blocked | 0 | 245 | 0.002450 | 2048 bits |
 | bloom | 0 | 1154 | 0.011540 | 2048 bits |
 
 ### Build
@@ -41,10 +42,11 @@ Lower is better. All filters use the same 2048-bit memory budget in this scenari
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 833.11 ns (828.39 ns, 839.27 ns) | 6.51 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/build_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.84 µs (1.83 µs, 1.86 µs) | 14.40 ns/op | 0.45x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/build_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 2.85 µs (2.83 µs, 2.87 µs) | 22.25 ns/op | 0.29x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/build_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 4.39 µs (4.36 µs, 4.41 µs) | 34.28 ns/op | 0.19x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/build_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 876.46 ns (871.71 ns, 881.59 ns) | 6.85 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/build_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 1.43 µs (1.43 µs, 1.43 µs) | 11.17 ns/op | 0.61x | `broomfilter-blocked [fp=0.002450, fn=0]` | [plot](target/criterion/build_compact-128/broomfilter-blocked%20%5Bfp%3D0.002450%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.92 µs (1.92 µs, 1.93 µs) | 15.03 ns/op | 0.46x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/build_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 2.85 µs (2.84 µs, 2.85 µs) | 22.23 ns/op | 0.31x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/build_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 4.46 µs (4.45 µs, 4.47 µs) | 34.85 ns/op | 0.20x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/build_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -52,10 +54,11 @@ Lower is better. All filters use the same 2048-bit memory budget in this scenari
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 21.94 µs (21.78 µs, 22.13 µs) | 5.36 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_member_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 57.67 µs (57.17 µs, 58.46 µs) | 14.08 ns/op | 0.38x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_member_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 81.41 µs (80.70 µs, 82.25 µs) | 19.87 ns/op | 0.27x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_member_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 141.30 µs (140.76 µs, 141.87 µs) | 34.50 ns/op | 0.16x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_member_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 22.88 µs (22.68 µs, 23.03 µs) | 5.59 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_member_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 47.54 µs (46.53 µs, 49.29 µs) | 11.61 ns/op | 0.48x | `broomfilter-blocked [fp=0.002450, fn=0]` | [plot](target/criterion/contains_member_compact-128/broomfilter-blocked%20%5Bfp%3D0.002450%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 59.85 µs (59.69 µs, 60.06 µs) | 14.61 ns/op | 0.38x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_member_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 81.32 µs (80.87 µs, 81.90 µs) | 19.85 ns/op | 0.28x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_member_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 142.47 µs (142.20 µs, 142.75 µs) | 34.78 ns/op | 0.16x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_member_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -63,10 +66,11 @@ Lower is better. All filters use the same 2048-bit memory budget in this scenari
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 8.02 µs (7.95 µs, 8.10 µs) | 1.96 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_absent_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 34.54 µs (34.15 µs, 35.04 µs) | 8.43 ns/op | 0.23x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_absent_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 68.52 µs (67.11 µs, 69.96 µs) | 16.73 ns/op | 0.12x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_absent_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 97.12 µs (96.04 µs, 98.24 µs) | 23.71 ns/op | 0.08x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_absent_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 8.72 µs (8.66 µs, 8.79 µs) | 2.13 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_absent_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
+| 2 | fastbloom | 35.65 µs (35.40 µs, 35.87 µs) | 8.70 ns/op | 0.24x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_absent_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
+| 3 | broomfilter-blocked | 65.85 µs (65.06 µs, 67.18 µs) | 16.08 ns/op | 0.13x | `broomfilter-blocked [fp=0.002450, fn=0]` | [plot](target/criterion/contains_absent_compact-128/broomfilter-blocked%20%5Bfp%3D0.002450%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 70.22 µs (67.61 µs, 72.20 µs) | 17.14 ns/op | 0.12x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_absent_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 93.85 µs (93.41 µs, 94.35 µs) | 22.91 ns/op | 0.09x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_absent_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -74,10 +78,11 @@ Lower is better. All filters use the same 2048-bit memory budget in this scenari
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 16.33 µs (16.16 µs, 16.48 µs) | 3.99 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 68.62 µs (65.99 µs, 72.04 µs) | 16.75 ns/op | 0.24x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 88.92 µs (88.23 µs, 89.58 µs) | 21.71 ns/op | 0.18x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 134.26 µs (133.17 µs, 135.40 µs) | 32.78 ns/op | 0.12x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 17.81 µs (17.62 µs, 17.99 µs) | 4.35 ns/op | 1.00x | `broomfilter [fp=0.000820, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/broomfilter%20%5Bfp%3D0.000820%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 63.06 µs (62.13 µs, 64.76 µs) | 15.40 ns/op | 0.28x | `broomfilter-blocked [fp=0.002450, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/broomfilter-blocked%20%5Bfp%3D0.002450%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 66.57 µs (65.94 µs, 67.12 µs) | 16.25 ns/op | 0.27x | `fastbloom [fp=0.000400, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/fastbloom%20%5Bfp%3D0.000400%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 88.59 µs (88.11 µs, 89.05 µs) | 21.63 ns/op | 0.20x | `bloom [fp=0.011540, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/bloom%20%5Bfp%3D0.011540%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 138.35 µs (138.16 µs, 138.57 µs) | 33.78 ns/op | 0.13x | `bloomfilter [fp=0.000750, fn=0]` | [plot](target/criterion/contains_mixed_compact-128/bloomfilter%20%5Bfp%3D0.000750%2C%20fn%3D0%5D/report/index.html) |
 
 ## Scenario `scale-4096`
 
@@ -95,6 +100,7 @@ Lower is better. All filters use the same 2048-bit memory budget in this scenari
 | broomfilter | 0 | 47 | 0.000470 | 65536 bits |
 | fastbloom | 0 | 51 | 0.000510 | 65536 bits |
 | bloom | 0 | 978 | 0.009780 | 65536 bits |
+| broomfilter-blocked | 0 | 6195 | 0.061950 | 65536 bits |
 
 ### Build
 
@@ -102,10 +108,11 @@ Lower is better. All filters use the same 65536-bit memory budget in this scenar
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 25.23 µs (25.15 µs, 25.31 µs) | 6.16 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/build_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 59.53 µs (59.14 µs, 60.02 µs) | 14.53 ns/op | 0.42x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/build_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 91.29 µs (90.99 µs, 91.59 µs) | 22.29 ns/op | 0.28x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/build_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 141.55 µs (140.99 µs, 142.19 µs) | 34.56 ns/op | 0.18x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/build_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 25.70 µs (25.63 µs, 25.75 µs) | 6.27 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/build_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 48.77 µs (48.61 µs, 48.93 µs) | 11.91 ns/op | 0.53x | `broomfilter-blocked [fp=0.061950, fn=0]` | [plot](target/criterion/build_scale-4096/broomfilter-blocked%20%5Bfp%3D0.061950%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 65.03 µs (64.23 µs, 65.60 µs) | 15.88 ns/op | 0.40x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/build_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 91.28 µs (90.92 µs, 91.68 µs) | 22.28 ns/op | 0.28x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/build_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 141.60 µs (141.44 µs, 141.76 µs) | 34.57 ns/op | 0.18x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/build_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -113,10 +120,11 @@ Lower is better. All filters use the same 65536-bit memory budget in this scenar
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 91.40 µs (90.88 µs, 92.00 µs) | 5.58 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_member_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 236.12 µs (234.19 µs, 238.30 µs) | 14.41 ns/op | 0.39x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_member_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 327.60 µs (324.62 µs, 330.84 µs) | 19.99 ns/op | 0.28x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_member_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 574.22 µs (570.78 µs, 578.23 µs) | 35.05 ns/op | 0.16x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_member_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 93.42 µs (92.95 µs, 93.77 µs) | 5.70 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_member_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 195.20 µs (191.14 µs, 202.62 µs) | 11.91 ns/op | 0.48x | `broomfilter-blocked [fp=0.061950, fn=0]` | [plot](target/criterion/contains_member_scale-4096/broomfilter-blocked%20%5Bfp%3D0.061950%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 240.60 µs (239.95 µs, 241.20 µs) | 14.69 ns/op | 0.39x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_member_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 323.55 µs (322.51 µs, 324.59 µs) | 19.75 ns/op | 0.29x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_member_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 570.82 µs (569.68 µs, 572.11 µs) | 34.84 ns/op | 0.16x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_member_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -124,10 +132,11 @@ Lower is better. All filters use the same 65536-bit memory budget in this scenar
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 33.95 µs (33.09 µs, 35.24 µs) | 2.07 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 174.08 µs (165.47 µs, 185.01 µs) | 10.63 ns/op | 0.20x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 346.10 µs (343.06 µs, 349.05 µs) | 21.12 ns/op | 0.10x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 463.81 µs (461.74 µs, 466.26 µs) | 28.31 ns/op | 0.07x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 56.55 µs (51.31 µs, 60.85 µs) | 3.45 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
+| 2 | fastbloom | 180.32 µs (175.16 µs, 185.73 µs) | 11.01 ns/op | 0.31x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
+| 3 | broomfilter-blocked | 293.47 µs (289.62 µs, 299.94 µs) | 17.91 ns/op | 0.19x | `broomfilter-blocked [fp=0.061950, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/broomfilter-blocked%20%5Bfp%3D0.061950%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 332.60 µs (328.07 µs, 337.34 µs) | 20.30 ns/op | 0.17x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 446.78 µs (445.55 µs, 447.99 µs) | 27.27 ns/op | 0.13x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_absent_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -135,10 +144,11 @@ Lower is better. All filters use the same 65536-bit memory budget in this scenar
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 86.62 µs (85.25 µs, 88.11 µs) | 5.29 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 278.51 µs (276.64 µs, 280.30 µs) | 17.00 ns/op | 0.31x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 361.60 µs (359.23 µs, 364.34 µs) | 22.07 ns/op | 0.24x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 545.24 µs (543.13 µs, 547.50 µs) | 33.28 ns/op | 0.16x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 100.45 µs (98.93 µs, 102.18 µs) | 6.13 ns/op | 1.00x | `broomfilter [fp=0.000470, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/broomfilter%20%5Bfp%3D0.000470%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 252.33 µs (248.70 µs, 258.89 µs) | 15.40 ns/op | 0.40x | `broomfilter-blocked [fp=0.061950, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/broomfilter-blocked%20%5Bfp%3D0.061950%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 283.82 µs (282.05 µs, 285.50 µs) | 17.32 ns/op | 0.35x | `fastbloom [fp=0.000510, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/fastbloom%20%5Bfp%3D0.000510%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 359.36 µs (358.36 µs, 360.25 µs) | 21.93 ns/op | 0.28x | `bloom [fp=0.009780, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/bloom%20%5Bfp%3D0.009780%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 551.95 µs (550.17 µs, 553.71 µs) | 33.69 ns/op | 0.18x | `bloomfilter [fp=0.000410, fn=0]` | [plot](target/criterion/contains_mixed_scale-4096/bloomfilter%20%5Bfp%3D0.000410%2C%20fn%3D0%5D/report/index.html) |
 
 ## Scenario `large-65536-16bpi`
 
@@ -156,6 +166,7 @@ Lower is better. All filters use the same 65536-bit memory budget in this scenar
 | bloomfilter | 0 | 55 | 0.000550 | 1048576 bits |
 | broomfilter | 0 | 56 | 0.000560 | 1048576 bits |
 | bloom | 0 | 1047 | 0.010470 | 1048576 bits |
+| broomfilter-blocked | 0 | 21335 | 0.213350 | 1048576 bits |
 
 ### Build
 
@@ -163,10 +174,11 @@ Lower is better. All filters use the same 1048576-bit memory budget in this scen
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 437.52 µs (436.28 µs, 438.78 µs) | 6.68 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 975.65 µs (970.32 µs, 980.19 µs) | 14.89 ns/op | 0.45x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.51 ms (1.50 ms, 1.52 ms) | 23.04 ns/op | 0.29x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.32 ms (2.31 ms, 2.34 ms) | 35.44 ns/op | 0.19x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 432.35 µs (431.42 µs, 433.28 µs) | 6.60 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 788.76 µs (785.78 µs, 792.51 µs) | 12.04 ns/op | 0.55x | `broomfilter-blocked [fp=0.213350, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/broomfilter-blocked%20%5Bfp%3D0.213350%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.05 ms (1.03 ms, 1.07 ms) | 16.04 ns/op | 0.41x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.50 ms (1.50 ms, 1.50 ms) | 22.91 ns/op | 0.29x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.31 ms (2.30 ms, 2.31 ms) | 35.21 ns/op | 0.19x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/build_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -174,10 +186,11 @@ Lower is better. All filters use the same 1048576-bit memory budget in this scen
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 394.03 µs (391.05 µs, 396.34 µs) | 6.01 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 970.91 µs (966.62 µs, 975.21 µs) | 14.81 ns/op | 0.41x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.31 ms (1.30 ms, 1.32 ms) | 19.99 ns/op | 0.30x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.27 ms (2.27 ms, 2.29 ms) | 34.71 ns/op | 0.17x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 396.86 µs (395.95 µs, 397.75 µs) | 6.06 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 775.56 µs (759.69 µs, 805.42 µs) | 11.83 ns/op | 0.51x | `broomfilter-blocked [fp=0.213350, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/broomfilter-blocked%20%5Bfp%3D0.213350%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 967.90 µs (966.34 µs, 969.31 µs) | 14.77 ns/op | 0.41x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.29 ms (1.29 ms, 1.29 ms) | 19.69 ns/op | 0.31x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.27 ms (2.27 ms, 2.28 ms) | 34.68 ns/op | 0.17x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_member_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -185,10 +198,11 @@ Lower is better. All filters use the same 1048576-bit memory budget in this scen
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 620.85 µs (609.43 µs, 632.61 µs) | 9.47 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.27 ms (1.25 ms, 1.29 ms) | 19.36 ns/op | 0.49x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.58 ms (1.57 ms, 1.58 ms) | 24.11 ns/op | 0.39x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.09 ms (2.08 ms, 2.09 ms) | 31.84 ns/op | 0.30x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 642.98 µs (633.78 µs, 651.61 µs) | 9.81 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 1.22 ms (1.21 ms, 1.24 ms) | 18.66 ns/op | 0.53x | `broomfilter-blocked [fp=0.213350, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/broomfilter-blocked%20%5Bfp%3D0.213350%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.23 ms (1.22 ms, 1.24 ms) | 18.75 ns/op | 0.52x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.54 ms (1.54 ms, 1.54 ms) | 23.50 ns/op | 0.42x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.10 ms (2.09 ms, 2.12 ms) | 32.03 ns/op | 0.31x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_absent_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -196,10 +210,11 @@ Lower is better. All filters use the same 1048576-bit memory budget in this scen
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 538.25 µs (534.55 µs, 542.21 µs) | 8.21 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.16 ms (1.16 ms, 1.17 ms) | 17.71 ns/op | 0.46x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.46 ms (1.46 ms, 1.47 ms) | 22.33 ns/op | 0.37x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.24 ms (2.23 ms, 2.25 ms) | 34.25 ns/op | 0.24x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 535.35 µs (532.58 µs, 538.05 µs) | 8.17 ns/op | 1.00x | `broomfilter [fp=0.000560, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/broomfilter%20%5Bfp%3D0.000560%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 995.85 µs (980.95 µs, 1.02 ms) | 15.20 ns/op | 0.54x | `broomfilter-blocked [fp=0.213350, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/broomfilter-blocked%20%5Bfp%3D0.213350%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.18 ms (1.18 ms, 1.19 ms) | 18.06 ns/op | 0.45x | `fastbloom [fp=0.000500, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/fastbloom%20%5Bfp%3D0.000500%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.44 ms (1.43 ms, 1.44 ms) | 21.96 ns/op | 0.37x | `bloom [fp=0.010470, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/bloom%20%5Bfp%3D0.010470%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.25 ms (2.24 ms, 2.26 ms) | 34.26 ns/op | 0.24x | `bloomfilter [fp=0.000550, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-16bpi/bloomfilter%20%5Bfp%3D0.000550%2C%20fn%3D0%5D/report/index.html) |
 
 ## Scenario `large-65536-8bpi`
 
@@ -217,6 +232,7 @@ Lower is better. All filters use the same 1048576-bit memory budget in this scen
 | bloomfilter | 0 | 2152 | 0.021520 | 524288 bits |
 | fastbloom | 0 | 2218 | 0.022180 | 524288 bits |
 | bloom | 0 | 4515 | 0.045150 | 524288 bits |
+| broomfilter-blocked | 0 | 32082 | 0.320820 | 524288 bits |
 
 ### Build
 
@@ -224,10 +240,11 @@ Lower is better. All filters use the same 524288-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 248.43 µs (247.83 µs, 249.24 µs) | 3.79 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 736.07 µs (716.37 µs, 758.82 µs) | 11.23 ns/op | 0.34x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.21 ms (1.20 ms, 1.21 ms) | 18.42 ns/op | 0.21x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 1.77 ms (1.76 ms, 1.77 ms) | 26.94 ns/op | 0.14x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 246.98 µs (246.54 µs, 247.35 µs) | 3.77 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 572.51 µs (562.92 µs, 583.33 µs) | 8.74 ns/op | 0.43x | `broomfilter-blocked [fp=0.320820, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/broomfilter-blocked%20%5Bfp%3D0.320820%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 737.63 µs (710.17 µs, 776.62 µs) | 11.26 ns/op | 0.33x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.21 ms (1.20 ms, 1.21 ms) | 18.40 ns/op | 0.20x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.76 ms (1.76 ms, 1.76 ms) | 26.87 ns/op | 0.14x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/build_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -235,10 +252,11 @@ Lower is better. All filters use the same 524288-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 229.69 µs (229.23 µs, 230.23 µs) | 3.50 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 730.66 µs (727.28 µs, 734.15 µs) | 11.15 ns/op | 0.31x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 977.33 µs (973.25 µs, 981.06 µs) | 14.91 ns/op | 0.24x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 1.75 ms (1.74 ms, 1.76 ms) | 26.70 ns/op | 0.13x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 232.31 µs (231.97 µs, 232.66 µs) | 3.54 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 573.14 µs (561.96 µs, 594.22 µs) | 8.75 ns/op | 0.41x | `broomfilter-blocked [fp=0.320820, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/broomfilter-blocked%20%5Bfp%3D0.320820%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 727.75 µs (726.36 µs, 728.85 µs) | 11.10 ns/op | 0.32x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 983.98 µs (980.71 µs, 987.48 µs) | 15.01 ns/op | 0.24x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.76 ms (1.75 ms, 1.77 ms) | 26.83 ns/op | 0.13x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_member_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -246,10 +264,11 @@ Lower is better. All filters use the same 524288-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 584.33 µs (574.61 µs, 593.18 µs) | 8.92 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.25 ms (1.23 ms, 1.28 ms) | 19.10 ns/op | 0.47x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.63 ms (1.62 ms, 1.64 ms) | 24.85 ns/op | 0.36x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.12 ms (2.11 ms, 2.12 ms) | 32.30 ns/op | 0.28x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 604.69 µs (594.54 µs, 615.62 µs) | 9.23 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 904.80 µs (892.39 µs, 928.13 µs) | 13.81 ns/op | 0.67x | `broomfilter-blocked [fp=0.320820, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/broomfilter-blocked%20%5Bfp%3D0.320820%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.20 ms (1.19 ms, 1.22 ms) | 18.36 ns/op | 0.50x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.57 ms (1.57 ms, 1.57 ms) | 23.96 ns/op | 0.39x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.12 ms (2.12 ms, 2.13 ms) | 32.40 ns/op | 0.28x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_absent_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -257,10 +276,11 @@ Lower is better. All filters use the same 524288-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 368.15 µs (365.62 µs, 370.99 µs) | 5.62 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.09 ms (1.09 ms, 1.09 ms) | 16.63 ns/op | 0.34x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.34 ms (1.33 ms, 1.35 ms) | 20.43 ns/op | 0.27x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.00 ms (2.00 ms, 2.01 ms) | 30.55 ns/op | 0.18x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 401.53 µs (391.62 µs, 411.13 µs) | 6.13 ns/op | 1.00x | `broomfilter [fp=0.021090, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/broomfilter%20%5Bfp%3D0.021090%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 770.78 µs (757.88 µs, 794.84 µs) | 11.76 ns/op | 0.52x | `broomfilter-blocked [fp=0.320820, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/broomfilter-blocked%20%5Bfp%3D0.320820%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.07 ms (1.05 ms, 1.08 ms) | 16.27 ns/op | 0.38x | `fastbloom [fp=0.022180, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/fastbloom%20%5Bfp%3D0.022180%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.35 ms (1.34 ms, 1.36 ms) | 20.55 ns/op | 0.30x | `bloom [fp=0.045150, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/bloom%20%5Bfp%3D0.045150%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.97 ms (1.96 ms, 1.98 ms) | 30.09 ns/op | 0.20x | `bloomfilter [fp=0.021520, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-8bpi/bloomfilter%20%5Bfp%3D0.021520%2C%20fn%3D0%5D/report/index.html) |
 
 ## Scenario `large-65536-4bpi`
 
@@ -278,6 +298,7 @@ Lower is better. All filters use the same 524288-bit memory budget in this scena
 | broomfilter | 0 | 14548 | 0.145480 | 262144 bits |
 | bloomfilter | 0 | 14589 | 0.145890 | 262144 bits |
 | bloom | 0 | 15880 | 0.158800 | 262144 bits |
+| broomfilter-blocked | 0 | 39531 | 0.395310 | 262144 bits |
 
 ### Build
 
@@ -285,10 +306,11 @@ Lower is better. All filters use the same 262144-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 157.77 µs (157.57 µs, 157.99 µs) | 2.41 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 581.41 µs (580.19 µs, 582.64 µs) | 8.87 ns/op | 0.27x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 897.38 µs (894.80 µs, 900.99 µs) | 13.69 ns/op | 0.18x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 1.33 ms (1.32 ms, 1.34 ms) | 20.24 ns/op | 0.12x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 157.90 µs (157.68 µs, 158.11 µs) | 2.41 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 450.81 µs (447.69 µs, 454.13 µs) | 6.88 ns/op | 0.35x | `broomfilter-blocked [fp=0.395310, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/broomfilter-blocked%20%5Bfp%3D0.395310%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 576.78 µs (575.38 µs, 578.52 µs) | 8.80 ns/op | 0.27x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 896.53 µs (895.83 µs, 897.19 µs) | 13.68 ns/op | 0.18x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.32 ms (1.31 ms, 1.32 ms) | 20.12 ns/op | 0.12x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/build_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -296,10 +318,11 @@ Lower is better. All filters use the same 262144-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 149.34 µs (148.91 µs, 149.72 µs) | 2.28 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 585.03 µs (582.83 µs, 587.37 µs) | 8.93 ns/op | 0.26x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 798.04 µs (793.93 µs, 801.96 µs) | 12.18 ns/op | 0.19x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 1.31 ms (1.30 ms, 1.31 ms) | 19.92 ns/op | 0.11x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 150.62 µs (150.41 µs, 150.79 µs) | 2.30 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 344.97 µs (327.17 µs, 379.38 µs) | 5.26 ns/op | 0.44x | `broomfilter-blocked [fp=0.395310, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/broomfilter-blocked%20%5Bfp%3D0.395310%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 581.08 µs (580.31 µs, 581.89 µs) | 8.87 ns/op | 0.26x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 788.70 µs (787.45 µs, 789.93 µs) | 12.03 ns/op | 0.19x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.30 ms (1.30 ms, 1.31 ms) | 19.90 ns/op | 0.12x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_member_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -307,10 +330,11 @@ Lower is better. All filters use the same 262144-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 533.92 µs (520.95 µs, 547.92 µs) | 8.15 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 1.24 ms (1.23 ms, 1.26 ms) | 18.98 ns/op | 0.43x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.59 ms (1.58 ms, 1.59 ms) | 24.23 ns/op | 0.34x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 2.01 ms (2.00 ms, 2.02 ms) | 30.72 ns/op | 0.27x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 526.28 µs (513.23 µs, 538.29 µs) | 8.03 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 627.46 µs (610.45 µs, 651.67 µs) | 9.57 ns/op | 0.84x | `broomfilter-blocked [fp=0.395310, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/broomfilter-blocked%20%5Bfp%3D0.395310%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 1.18 ms (1.17 ms, 1.20 ms) | 18.00 ns/op | 0.45x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.53 ms (1.53 ms, 1.54 ms) | 23.40 ns/op | 0.34x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 2.01 ms (2.00 ms, 2.01 ms) | 30.64 ns/op | 0.26x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_absent_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -318,10 +342,11 @@ Lower is better. All filters use the same 262144-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 258.46 µs (250.50 µs, 266.97 µs) | 3.94 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 984.87 µs (976.49 µs, 993.31 µs) | 15.03 ns/op | 0.26x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloom | 1.21 ms (1.21 ms, 1.21 ms) | 18.47 ns/op | 0.21x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloomfilter | 1.66 ms (1.65 ms, 1.67 ms) | 25.29 ns/op | 0.16x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 316.87 µs (303.13 µs, 331.24 µs) | 4.84 ns/op | 1.00x | `broomfilter [fp=0.145480, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/broomfilter%20%5Bfp%3D0.145480%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 612.96 µs (601.66 µs, 634.54 µs) | 9.35 ns/op | 0.52x | `broomfilter-blocked [fp=0.395310, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/broomfilter-blocked%20%5Bfp%3D0.395310%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 975.47 µs (971.79 µs, 978.61 µs) | 14.88 ns/op | 0.32x | `fastbloom [fp=0.145090, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/fastbloom%20%5Bfp%3D0.145090%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloom | 1.21 ms (1.20 ms, 1.21 ms) | 18.42 ns/op | 0.26x | `bloom [fp=0.158800, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/bloom%20%5Bfp%3D0.158800%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloomfilter | 1.67 ms (1.66 ms, 1.67 ms) | 25.44 ns/op | 0.19x | `bloomfilter [fp=0.145890, fn=0]` | [plot](target/criterion/contains_mixed_large-65536-4bpi/bloomfilter%20%5Bfp%3D0.145890%2C%20fn%3D0%5D/report/index.html) |
 
 ## Scenario `stress-65536-2bpi`
 
@@ -339,6 +364,7 @@ Lower is better. All filters use the same 262144-bit memory budget in this scena
 | fastbloom | 0 | 39395 | 0.393950 | 131072 bits |
 | bloomfilter | 0 | 39482 | 0.394820 | 131072 bits |
 | bloom | 0 | 40007 | 0.400070 | 131072 bits |
+| broomfilter-blocked | 0 | 63202 | 0.632020 | 131072 bits |
 
 ### Build
 
@@ -346,10 +372,11 @@ Lower is better. All filters use the same 131072-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 98.20 µs (97.64 µs, 98.86 µs) | 1.50 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 491.18 µs (489.09 µs, 493.53 µs) | 7.49 ns/op | 0.20x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloomfilter | 641.50 µs (615.10 µs, 667.13 µs) | 9.79 ns/op | 0.15x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloom | 831.22 µs (827.51 µs, 836.23 µs) | 12.68 ns/op | 0.12x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 100.30 µs (98.64 µs, 102.54 µs) | 1.53 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 268.94 µs (268.02 µs, 270.34 µs) | 4.10 ns/op | 0.37x | `broomfilter-blocked [fp=0.632020, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/broomfilter-blocked%20%5Bfp%3D0.632020%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 495.55 µs (493.93 µs, 497.40 µs) | 7.56 ns/op | 0.20x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloomfilter | 603.14 µs (596.34 µs, 610.20 µs) | 9.20 ns/op | 0.17x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloom | 847.53 µs (839.70 µs, 856.65 µs) | 12.93 ns/op | 0.12x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/build_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains present keys
 
@@ -357,10 +384,11 @@ Lower is better. All filters use the same 131072-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 100.40 µs (100.13 µs, 100.77 µs) | 1.53 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 506.68 µs (504.91 µs, 508.69 µs) | 7.73 ns/op | 0.20x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloomfilter | 594.28 µs (590.72 µs, 598.40 µs) | 9.07 ns/op | 0.17x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloom | 751.17 µs (748.30 µs, 754.12 µs) | 11.46 ns/op | 0.13x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 102.21 µs (101.92 µs, 102.50 µs) | 1.56 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 314.70 µs (309.07 µs, 325.42 µs) | 4.80 ns/op | 0.32x | `broomfilter-blocked [fp=0.632020, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/broomfilter-blocked%20%5Bfp%3D0.632020%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 510.38 µs (507.27 µs, 513.46 µs) | 7.79 ns/op | 0.20x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloomfilter | 590.35 µs (588.69 µs, 592.48 µs) | 9.01 ns/op | 0.17x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloom | 760.58 µs (752.58 µs, 770.85 µs) | 11.61 ns/op | 0.13x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_member_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains absent keys
 
@@ -368,10 +396,11 @@ Lower is better. All filters use the same 131072-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 213.14 µs (190.14 µs, 232.90 µs) | 3.25 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 940.98 µs (936.03 µs, 947.03 µs) | 14.36 ns/op | 0.23x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloomfilter | 1.11 ms (1.10 ms, 1.11 ms) | 16.93 ns/op | 0.19x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloom | 1.43 ms (1.42 ms, 1.43 ms) | 21.79 ns/op | 0.15x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 181.16 µs (151.23 µs, 214.95 µs) | 2.76 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 388.31 µs (381.20 µs, 400.22 µs) | 5.93 ns/op | 0.47x | `broomfilter-blocked [fp=0.632020, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/broomfilter-blocked%20%5Bfp%3D0.632020%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 950.43 µs (948.58 µs, 952.75 µs) | 14.50 ns/op | 0.19x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloomfilter | 1.12 ms (1.12 ms, 1.13 ms) | 17.14 ns/op | 0.16x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloom | 1.44 ms (1.43 ms, 1.44 ms) | 21.90 ns/op | 0.13x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_absent_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
 
 ### Contains mixed workload
 
@@ -379,8 +408,9 @@ Lower is better. All filters use the same 131072-bit memory budget in this scena
 
 | Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |
 | ---: | --- | --- | ---: | ---: | --- | --- |
-| 1 | **broomfilter** | 115.39 µs (106.28 µs, 125.27 µs) | 1.76 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
-| 2 | fastbloom | 721.87 µs (718.12 µs, 726.76 µs) | 11.01 ns/op | 0.16x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
-| 3 | bloomfilter | 848.12 µs (846.97 µs, 849.23 µs) | 12.94 ns/op | 0.14x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
-| 4 | bloom | 1.07 ms (1.07 ms, 1.08 ms) | 16.39 ns/op | 0.11x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
+| 1 | **broomfilter** | 173.08 µs (157.38 µs, 189.02 µs) | 2.64 ns/op | 1.00x | `broomfilter [fp=0.393160, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/broomfilter%20%5Bfp%3D0.393160%2C%20fn%3D0%5D/report/index.html) |
+| 2 | broomfilter-blocked | 383.17 µs (375.79 µs, 396.94 µs) | 5.85 ns/op | 0.45x | `broomfilter-blocked [fp=0.632020, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/broomfilter-blocked%20%5Bfp%3D0.632020%2C%20fn%3D0%5D/report/index.html) |
+| 3 | fastbloom | 727.12 µs (722.82 µs, 733.09 µs) | 11.09 ns/op | 0.24x | `fastbloom [fp=0.393950, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/fastbloom%20%5Bfp%3D0.393950%2C%20fn%3D0%5D/report/index.html) |
+| 4 | bloomfilter | 851.46 µs (849.39 µs, 853.55 µs) | 12.99 ns/op | 0.20x | `bloomfilter [fp=0.394820, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/bloomfilter%20%5Bfp%3D0.394820%2C%20fn%3D0%5D/report/index.html) |
+| 5 | bloom | 1.07 ms (1.07 ms, 1.08 ms) | 16.35 ns/op | 0.16x | `bloom [fp=0.400070, fn=0]` | [plot](target/criterion/contains_mixed_stress-65536-2bpi/bloom%20%5Bfp%3D0.400070%2C%20fn%3D0%5D/report/index.html) |
 
