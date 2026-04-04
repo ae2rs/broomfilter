@@ -129,7 +129,11 @@ fn time_build(scenario: Scenario, data: &ScenarioData, iterations: usize) -> (Du
     (start.elapsed(), iterations * scenario.inserted_items)
 }
 
-fn time_read(scenario: Scenario, data: &ScenarioData, iterations: usize) -> (Duration, usize, usize) {
+fn time_read(
+    scenario: Scenario,
+    data: &ScenarioData,
+    iterations: usize,
+) -> (Duration, usize, usize) {
     let filter = build_filter(&data.members, scenario);
     let queries = &data.read_queries;
 
