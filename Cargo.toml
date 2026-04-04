@@ -7,6 +7,15 @@ license = "MIT"
 keywords = ["bloom-filter", "probabilistic", "data-structure", "broom", "maybe"]
 categories = ["data-structures"]
 readme = "README.md"
+include = [
+    "/src/**",
+    "/Cargo.toml",
+    "/README.md",
+    "/LICENSE",
+]
+
+[features]
+benchmarks = []
 
 [profile.bench]
 debug = true
@@ -14,10 +23,12 @@ debug = true
 [[bench]]
 harness = false
 name = "comparison"
+required-features = ["benchmarks"]
 
 [[bench]]
 harness = false
 name = "basic"
+required-features = ["benchmarks"]
 
 [dependencies]
 bitvec = "1.0.1"

@@ -4,16 +4,16 @@ use std::hint::black_box;
 use std::time::{Duration, Instant};
 
 // Run the focused in-house optimization bench:
-//   cargo bench --bench basic
+//   cargo bench --features benchmarks --bench basic
 //
 // Profile insert-only:
-//   cargo flamegraph --bench basic -- --mode insert
+//   cargo flamegraph --features benchmarks --bench basic -- --mode insert
 //
 // Profile read-only:
-//   cargo flamegraph --bench basic -- --mode read
+//   cargo flamegraph --features benchmarks --bench basic -- --mode read
 //
 // Override the scenario or iteration count when needed:
-//   cargo flamegraph --bench basic -- --mode read --scenario compact-128 --iterations 100000
+//   cargo flamegraph --features benchmarks --bench basic -- --mode read --scenario compact-128 --iterations 100000
 // The flamegraph will be written to flamegraph.svg in the project root by default.
 
 #[derive(Clone, Copy)]
@@ -171,7 +171,7 @@ fn print_result(
 
 fn print_usage_and_exit() -> ! {
     eprintln!(
-        "usage: cargo bench --bench basic -- [--mode <name>] [--scenario <name>] [--iterations <n>]"
+        "usage: cargo bench --features benchmarks --bench basic -- [--mode <name>] [--scenario <name>] [--iterations <n>]"
     );
     eprintln!("modes: insert, read");
     eprintln!("scenarios: compact-128, scale-4096");
