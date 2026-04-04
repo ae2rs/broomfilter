@@ -1,25 +1,21 @@
-use bloom::{ASMS as _, BloomFilter as LegacyBloom};
+use bloom::{ASMS as _, BloomFilter as LegacyBloom, optimal_num_hashes as legacy_optimal_num_hashes};
 use bloomfilter::Bloom;
+use bloomfilter::reexports::siphasher::sip::SipHasher13;
 use broomfilter::Filter as BroomFilter;
 use criterion::{BenchmarkId, Criterion, Throughput};
-use cuckoofilter::CuckooFilter;
-use ethbloom::{Bloom as EthBloom, Input as EthInput};
 use fastbloom::BloomFilter as FastBloom;
-use qfilter::Filter as QuotientFilter;
 use serde::Deserialize;
 use std::cmp::Ordering;
-use std::convert::TryFrom;
 use std::fmt::Write as _;
 use std::fs;
 use std::hint::black_box;
+use std::hash::BuildHasher;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
-use xorf::{BinaryFuse8, Filter as _};
 
 #[derive(Clone, Copy)]
 struct Key {
-    id: u64,
     bytes: [u8; 16],
 }
 
@@ -27,9 +23,9 @@ struct Key {
 struct Scenario {
     name: &'static str,
     inserted_items: usize,
+    shared_filter_bits: usize,
     query_batch_size: usize,
     precision_queries: usize,
-    target_false_positive_rate: f64,
 }
 
 struct ScenarioData {
@@ -147,26 +143,22 @@ trait FilterAdapter {
 struct BroomAdapter;
 struct FastBloomAdapter;
 struct BloomFilterCrateAdapter;
-struct CuckooAdapter;
-struct XorAdapter;
-struct QuotientAdapter;
 struct BloomCrateAdapter;
-struct EthBloomAdapter;
 
 const SCENARIOS: [Scenario; 2] = [
     Scenario {
         name: "compact-128",
         inserted_items: 128,
+        shared_filter_bits: 2_048,
         query_batch_size: 4_096,
         precision_queries: 100_000,
-        target_false_positive_rate: 0.005,
     },
     Scenario {
         name: "scale-4096",
         inserted_items: 4_096,
+        shared_filter_bits: 65_536,
         query_batch_size: 16_384,
         precision_queries: 100_000,
-        target_false_positive_rate: 0.005,
     },
 ];
 
@@ -175,7 +167,7 @@ fn make_key(id: u64) -> Key {
     bytes[..8].copy_from_slice(&id.to_le_bytes());
     bytes[8..].copy_from_slice(&id.wrapping_mul(0x9E37_79B9_7F4A_7C15).to_le_bytes());
 
-    Key { id, bytes }
+    Key { bytes }
 }
 
 fn prepare_scenario_data(scenario: Scenario) -> ScenarioData {
@@ -212,12 +204,28 @@ fn prepare_scenario_data(scenario: Scenario) -> ScenarioData {
     }
 }
 
-fn broom_size_exponent(expected_items: usize, target_false_positive_rate: f64) -> usize {
-    let ln2 = std::f64::consts::LN_2;
-    let required_bits = (-(expected_items as f64) * target_false_positive_rate.ln() / (ln2 * ln2))
-        .ceil()
-        .max(1.0) as usize;
-    required_bits.next_power_of_two().trailing_zeros() as usize
+const FASTBLOOM_SEED: u128 = 0x1357_9BDF_2468_ACE0_FEDC_BA98_7654_3210;
+const BLOOMFILTER_SEED: [u8; 32] = [
+    0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE,
+    0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01,
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
+    0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+];
+
+#[derive(Clone, Copy, Default)]
+struct FixedSipHasherBuilder<const K0: u64, const K1: u64>;
+
+impl<const K0: u64, const K1: u64> BuildHasher for FixedSipHasherBuilder<K0, K1> {
+    type Hasher = SipHasher13;
+
+    fn build_hasher(&self) -> Self::Hasher {
+        SipHasher13::new_with_keys(K0, K1)
+    }
+}
+
+fn broom_size_exponent(shared_filter_bits: usize) -> usize {
+    assert!(shared_filter_bits.is_power_of_two());
+    shared_filter_bits.trailing_zeros() as usize
 }
 
 impl FilterAdapter for BroomAdapter {
@@ -228,15 +236,11 @@ impl FilterAdapter for BroomAdapter {
     }
 
     fn config(scenario: Scenario) -> String {
-        let exponent = broom_size_exponent(
-            scenario.inserted_items,
-            scenario.target_false_positive_rate,
-        );
-        format!("2^{exponent} bits")
+        format!("{} bits", scenario.shared_filter_bits)
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let exponent = broom_size_exponent(members.len(), scenario.target_false_positive_rate);
+        let exponent = broom_size_exponent(scenario.shared_filter_bits);
         let mut filter = BroomFilter::new(exponent, members.len()).expect("unable to create filter");
 
         for key in members {
@@ -259,12 +263,14 @@ impl FilterAdapter for FastBloomAdapter {
     }
 
     fn config(scenario: Scenario) -> String {
-        format!("target fp={:.4}", scenario.target_false_positive_rate)
+        format!("{} bits", scenario.shared_filter_bits)
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
         let mut filter =
-            FastBloom::with_false_pos(scenario.target_false_positive_rate).expected_items(members.len());
+            FastBloom::with_num_bits(scenario.shared_filter_bits)
+                .seed(&FASTBLOOM_SEED)
+                .expected_items(members.len());
 
         for key in members {
             filter.insert(&key.bytes);
@@ -286,12 +292,16 @@ impl FilterAdapter for BloomFilterCrateAdapter {
     }
 
     fn config(scenario: Scenario) -> String {
-        format!("target fp={:.4}", scenario.target_false_positive_rate)
+        format!("{} bits", scenario.shared_filter_bits)
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let mut filter = Bloom::new_for_fp_rate(members.len(), scenario.target_false_positive_rate)
-            .expect("unable to create bloomfilter crate filter");
+        let mut filter = Bloom::new_with_seed(
+            scenario.shared_filter_bits / 8,
+            members.len(),
+            &BLOOMFILTER_SEED,
+        )
+        .expect("unable to create bloomfilter crate filter");
 
         for key in members {
             filter.set(&key.bytes);
@@ -305,100 +315,26 @@ impl FilterAdapter for BloomFilterCrateAdapter {
     }
 }
 
-impl FilterAdapter for CuckooAdapter {
-    type Filter = CuckooFilter<std::collections::hash_map::DefaultHasher>;
-
-    fn name() -> &'static str {
-        "cuckoofilter"
-    }
-
-    fn config(_scenario: Scenario) -> String {
-        "capacity = 2x inserted".to_string()
-    }
-
-    fn build(members: &[Key], _scenario: Scenario) -> Self::Filter {
-        let mut filter = CuckooFilter::with_capacity(members.len() * 2);
-
-        for key in members {
-            filter.add(&key.bytes).expect("unable to populate cuckoo filter");
-        }
-
-        filter
-    }
-
-    fn contains(filter: &Self::Filter, key: &Key) -> bool {
-        filter.contains(&key.bytes)
-    }
-}
-
-impl FilterAdapter for XorAdapter {
-    type Filter = BinaryFuse8;
-
-    fn name() -> &'static str {
-        "xorf"
-    }
-
-    fn config(_scenario: Scenario) -> String {
-        "BinaryFuse8 (~0.39% fp)".to_string()
-    }
-
-    fn build(members: &[Key], _scenario: Scenario) -> Self::Filter {
-        let member_ids: Vec<u64> = members.iter().map(|key| key.id).collect();
-        BinaryFuse8::try_from(&member_ids).expect("unable to build xor filter")
-    }
-
-    fn contains(filter: &Self::Filter, key: &Key) -> bool {
-        filter.contains(&key.id)
-    }
-}
-
-impl FilterAdapter for QuotientAdapter {
-    type Filter = QuotientFilter;
-
-    fn name() -> &'static str {
-        "qfilter"
-    }
-
-    fn config(scenario: Scenario) -> String {
-        format!("target fp={:.4}", scenario.target_false_positive_rate)
-    }
-
-    fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let mut filter = QuotientFilter::new(
-            members.len() as u64,
-            scenario.target_false_positive_rate,
-        )
-        .expect("unable to create quotient filter");
-
-        for key in members {
-            filter
-                .insert(key.bytes)
-                .expect("unable to populate quotient filter");
-        }
-
-        filter
-    }
-
-    fn contains(filter: &Self::Filter, key: &Key) -> bool {
-        filter.contains(key.bytes)
-    }
-}
-
 impl FilterAdapter for BloomCrateAdapter {
-    type Filter = LegacyBloom;
+    type Filter = LegacyBloom<
+        FixedSipHasherBuilder<0x0123_4567_89AB_CDEF, 0xFEDC_BA98_7654_3210>,
+        FixedSipHasherBuilder<0x0F1E_2D3C_4B5A_6978, 0x8877_6655_4433_2211>,
+    >;
 
     fn name() -> &'static str {
         "bloom"
     }
 
     fn config(scenario: Scenario) -> String {
-        format!("target fp={:.4}", scenario.target_false_positive_rate)
+        format!("{} bits", scenario.shared_filter_bits)
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let mut filter = LegacyBloom::with_rate(
-            scenario.target_false_positive_rate as f32,
-            members.len() as u32,
+        let mut filter = LegacyBloom::with_size_and_hashers(
+            scenario.shared_filter_bits,
+            legacy_optimal_num_hashes(scenario.shared_filter_bits, members.len() as u32),
+            FixedSipHasherBuilder,
+            FixedSipHasherBuilder,
         );
 
         for key in members {
@@ -412,33 +348,6 @@ impl FilterAdapter for BloomCrateAdapter {
         filter.contains(&key.bytes)
     }
 }
-
-impl FilterAdapter for EthBloomAdapter {
-    type Filter = EthBloom;
-
-    fn name() -> &'static str {
-        "ethbloom"
-    }
-
-    fn config(_scenario: Scenario) -> String {
-        "fixed 2048-bit bloom".to_string()
-    }
-
-    fn build(members: &[Key], _scenario: Scenario) -> Self::Filter {
-        let mut filter = EthBloom::default();
-
-        for key in members {
-            filter.accrue(EthInput::Raw(&key.bytes));
-        }
-
-        filter
-    }
-
-    fn contains(filter: &Self::Filter, key: &Key) -> bool {
-        filter.contains_input(EthInput::Raw(&key.bytes))
-    }
-}
-
 fn measure_accuracy<T: FilterAdapter>(scenario: Scenario, data: &ScenarioData) -> AccuracyReport {
     let filter = T::build(&data.members, scenario);
     let false_negatives = data
@@ -463,10 +372,10 @@ fn measure_accuracy<T: FilterAdapter>(scenario: Scenario, data: &ScenarioData) -
 
 fn print_accuracy_report(scenario: Scenario, reports: &[AccuracyReport]) {
     println!(
-        "\n=== Precision summary: {} (inserted={}, target fp={:.4}, precision queries={}) ===",
+        "\n=== Precision summary: {} (inserted={}, shared bits={}, precision queries={}) ===",
         scenario.name,
         scenario.inserted_items,
-        scenario.target_false_positive_rate,
+        scenario.shared_filter_bits,
         scenario.precision_queries,
     );
     println!(
@@ -569,11 +478,7 @@ fn collect_accuracy_reports(scenario: Scenario, data: &ScenarioData) -> Vec<Accu
         measure_accuracy::<BroomAdapter>(scenario, data),
         measure_accuracy::<FastBloomAdapter>(scenario, data),
         measure_accuracy::<BloomFilterCrateAdapter>(scenario, data),
-        measure_accuracy::<CuckooAdapter>(scenario, data),
-        measure_accuracy::<XorAdapter>(scenario, data),
-        measure_accuracy::<QuotientAdapter>(scenario, data),
         measure_accuracy::<BloomCrateAdapter>(scenario, data),
-        measure_accuracy::<EthBloomAdapter>(scenario, data),
     ]
 }
 
@@ -593,11 +498,7 @@ fn criterion_benchmark(c: &mut Criterion) -> Vec<ScenarioResult> {
                 "bloomfilter" => {
                     bench_adapter::<BloomFilterCrateAdapter>(c, scenario, &data, accuracy)
                 }
-                "cuckoofilter" => bench_adapter::<CuckooAdapter>(c, scenario, &data, accuracy),
-                "xorf" => bench_adapter::<XorAdapter>(c, scenario, &data, accuracy),
-                "qfilter" => bench_adapter::<QuotientAdapter>(c, scenario, &data, accuracy),
                 "bloom" => bench_adapter::<BloomCrateAdapter>(c, scenario, &data, accuracy),
-                "ethbloom" => bench_adapter::<EthBloomAdapter>(c, scenario, &data, accuracy),
                 _ => unreachable!("unknown library benchmark requested"),
             }
         }
@@ -782,8 +683,9 @@ fn render_performance_table(
     }
     let _ = writeln!(
         markdown,
-        "Lower is better. Build is normalized per inserted item; contains workloads are normalized per query over {} operations.\n",
-        scenario.query_batch_size,
+        "Lower is better. All filters use the same {}-bit memory budget in this scenario. Build is normalized per inserted item; contains workloads are normalized per query over {} operations.\n",
+        scenario.shared_filter_bits,
+        scenario.query_batch_size
     );
 
     markdown.push_str(
@@ -822,7 +724,7 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
     let mut markdown = String::new();
     markdown.push_str("# Performance Report\n\n");
     markdown.push_str(
-        "Generated from the Criterion benchmark suite in `benches/basic.rs`. This report compares throughput-oriented timings with measured precision for `broomfilter` and the reference crates in the same scenarios.\n\n",
+        "Generated from the Criterion benchmark suite in `benches/comparison.rs`. This report compares `broomfilter` against other mutable Bloom-style filters under equal per-scenario memory budgets, deterministic setup, and identical key datasets.\n\n",
     );
 
     let overall_report = output_directory.join("report").join("index.html");
@@ -830,6 +732,7 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
         let _ = writeln!(markdown, "- Overall report: {}", link);
     }
     markdown.push_str("- Benchmarks covered: build, present lookups, absent lookups, and mixed lookups\n");
+    markdown.push_str("- Comparison set: mutable Bloom-style filters that can be configured to the same exact bit budget through their public APIs\n");
     markdown.push_str("- Precision covered: false negatives on inserted keys and false positives over 100,000 deterministic absent-key probes per scenario\n\n");
 
     markdown.push_str("## Scenario Summary\n\n");
@@ -910,17 +813,19 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
             "- Inserted items: {}",
             scenario.inserted_items,
         );
+        let _ = writeln!(
+            markdown,
+            "- Shared filter size: {} bits ({} bytes)",
+            scenario.shared_filter_bits,
+            scenario.shared_filter_bits / 8,
+        );
         let _ = writeln!(markdown, "- Query batch size: {}", scenario.query_batch_size);
         let _ = writeln!(
             markdown,
             "- Precision probes: {}",
             scenario.precision_queries,
         );
-        let _ = writeln!(
-            markdown,
-            "- Target false-positive rate for configurable filters: {:.4}\n",
-            scenario.target_false_positive_rate,
-        );
+        markdown.push('\n');
 
         markdown.push_str("### Precision\n\n");
         render_precision_table(&mut markdown, scenario_result);

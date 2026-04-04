@@ -10,7 +10,7 @@ readme = "README.md"
 
 [[bench]]
 harness = false
-name = "basic"
+name = "comparison"
 
 [dependencies]
 bitvec = "1.0.1"
