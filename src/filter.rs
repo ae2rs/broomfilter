@@ -84,6 +84,33 @@ impl Filter {
 
         true
     }
+
+    /// Resets the filter to empty without reallocating.
+    pub fn clear(&mut self) {
+        self.array.fill(0);
+    }
+
+    /// Estimates the number of distinct items currently in the filter.
+    pub fn estimated_count(&self) -> f64 {
+        let m = (self.mask + 1) as f64;
+        let bits_set: u64 = self.array.iter().map(|w| w.count_ones() as u64).sum();
+        -(m / self.k as f64) * (1.0 - bits_set as f64 / m).ln()
+    }
+
+    /// Merges another filter into this one (bitwise OR).
+    ///
+    /// Both filters must have been created with identical parameters.
+    pub fn union(&mut self, other: &Filter) -> Result<(), Error> {
+        if self.k != other.k || self.mask != other.mask {
+            return Err(Error::InvalidArgument(
+                "filters must have identical parameters".to_string(),
+            ));
+        }
+        for (a, b) in self.array.iter_mut().zip(other.array.iter()) {
+            *a |= *b;
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -205,5 +232,47 @@ mod tests {
         assert!(Filter::from_fpr(100, 0.0).is_err());
         assert!(Filter::from_fpr(100, 1.0).is_err());
         assert!(Filter::from_fpr(100, -0.5).is_err());
+    }
+
+    #[test]
+    fn clear_resets_filter() {
+        let mut filter = Filter::new(10, 100).unwrap();
+        for i in 0..100 {
+            filter.insert(i.to_string());
+        }
+        filter.clear();
+        for i in 0..100 {
+            assert!(!filter.contains(i.to_string()));
+        }
+    }
+
+    #[test]
+    fn estimated_count_approximates_insertions() {
+        let n = 500;
+        let mut filter = Filter::new(14, n).unwrap();
+        for i in 0..n {
+            filter.insert(i.to_string());
+        }
+        let estimate = filter.estimated_count();
+        let error = (estimate - n as f64).abs() / n as f64;
+        assert!(error < 0.1, "estimate {estimate:.0} too far from {n}");
+    }
+
+    #[test]
+    fn union_merges_filters() {
+        let mut a = Filter::new(10, 100).unwrap();
+        let mut b = Filter::new(10, 100).unwrap();
+        a.insert("hello");
+        b.insert("world");
+        a.union(&b).unwrap();
+        assert!(a.contains("hello"));
+        assert!(a.contains("world"));
+    }
+
+    #[test]
+    fn union_rejects_mismatched_filters() {
+        let mut a = Filter::new(10, 100).unwrap();
+        let b = Filter::new(12, 100).unwrap();
+        assert!(a.union(&b).is_err());
     }
 }
