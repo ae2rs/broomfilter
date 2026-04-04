@@ -1,11 +1,10 @@
 use crate::error::Error;
 use crate::hash::hash;
-use bitvec::prelude::*;
 
 pub struct Filter {
     k: u64,
     mask: u64,
-    array: BitVec<usize, Lsb0>,
+    array: Vec<u64>,
 }
 
 impl Filter {
@@ -24,11 +23,12 @@ impl Filter {
         let m = 1u64 << size;
         let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
         let k = k.max(1);
+        let words = ((m as usize) + 63) >> 6;
 
         Ok(Self {
             k,
             mask: m - 1,
-            array: bitvec![0; m as usize],
+            array: vec![0u64; words],
         })
     }
 
@@ -58,11 +58,11 @@ impl Filter {
         let (h1, h2) = hash(value);
 
         for i in 0..self.k {
-            let idx = h1.wrapping_add(i.wrapping_mul(h2));
-            let idx = (idx & self.mask) as usize;
-
+            let idx = h1.wrapping_add(i.wrapping_mul(h2)) & self.mask;
+            // SAFETY: mask guarantees idx < m, and m <= array.len() * 64.
             unsafe {
-                self.array.set_unchecked(idx, true);
+                let word = self.array.get_unchecked_mut((idx >> 6) as usize);
+                *word |= 1 << (idx & 63);
             }
         }
     }
@@ -72,11 +72,12 @@ impl Filter {
         let (h1, h2) = hash(value);
 
         for i in 0..self.k {
-            let idx = h1.wrapping_add(i.wrapping_mul(h2));
-            let idx = (idx & self.mask) as usize;
-
-            if !self.array[idx] {
-                return false;
+            let idx = h1.wrapping_add(i.wrapping_mul(h2)) & self.mask;
+            // SAFETY: mask guarantees idx < m, and m <= array.len() * 64.
+            unsafe {
+                if *self.array.get_unchecked((idx >> 6) as usize) & (1 << (idx & 63)) == 0 {
+                    return false;
+                }
             }
         }
 
