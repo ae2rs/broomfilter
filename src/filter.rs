@@ -38,6 +38,7 @@ impl Filter {
         for i in 0..self.k {
             let idx = h1.wrapping_add(i.wrapping_mul(h2));
             let idx = (idx & self.mask) as usize;
+
             unsafe {
                 self.array.set_unchecked(idx, true);
             }
@@ -49,7 +50,9 @@ impl Filter {
 
         for i in 0..self.k {
             let idx = h1.wrapping_add(i.wrapping_mul(h2));
-            if !self.array[(idx & self.mask) as usize] {
+            let idx = (idx & self.mask) as usize;
+
+            if !self.array[idx] {
                 return false;
             }
         }
