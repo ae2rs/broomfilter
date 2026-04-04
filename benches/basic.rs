@@ -6,8 +6,14 @@ use std::time::{Duration, Instant};
 // Run the focused in-house optimization bench:
 //   cargo bench --bench basic
 //
-// Profile a specific workload with cargo-flamegraph:
-//   cargo flamegraph --bench basic -- --scenario scale-4096 --workload contains-mixed
+// Profile insert-only:
+//   cargo flamegraph --bench basic -- --mode insert
+//
+// Profile read-only:
+//   cargo flamegraph --bench basic -- --mode read
+//
+// Override the scenario or iteration count when needed:
+//   cargo flamegraph --bench basic -- --mode read --scenario compact-128 --iterations 100000
 // The flamegraph will be written to flamegraph.svg in the project root by default.
 
 #[derive(Clone, Copy)]
@@ -27,43 +33,30 @@ struct Scenario {
 
 struct ScenarioData {
     members: Vec<Key>,
-    member_queries: Vec<Key>,
-    absent_queries: Vec<Key>,
-    mixed_queries: Vec<Key>,
+    read_queries: Vec<Key>,
 }
 
 #[derive(Clone, Copy)]
-enum Workload {
-    Build,
-    ContainsMember,
-    ContainsAbsent,
-    ContainsMixed,
+enum Mode {
+    Insert,
+    Read,
 }
 
-impl Workload {
-    const ALL: [Workload; 4] = [
-        Workload::Build,
-        Workload::ContainsMember,
-        Workload::ContainsAbsent,
-        Workload::ContainsMixed,
-    ];
+impl Mode {
+    const ALL: [Mode; 2] = [Mode::Insert, Mode::Read];
 
     fn parse(value: &str) -> Option<Self> {
         match value {
-            "build" => Some(Self::Build),
-            "contains-member" => Some(Self::ContainsMember),
-            "contains-absent" => Some(Self::ContainsAbsent),
-            "contains-mixed" => Some(Self::ContainsMixed),
+            "insert" => Some(Self::Insert),
+            "read" => Some(Self::Read),
             _ => None,
         }
     }
 
     fn name(self) -> &'static str {
         match self {
-            Self::Build => "build",
-            Self::ContainsMember => "contains-member",
-            Self::ContainsAbsent => "contains-absent",
-            Self::ContainsMixed => "contains-mixed",
+            Self::Insert => "insert",
+            Self::Read => "read",
         }
     }
 }
@@ -74,18 +67,20 @@ const SCENARIOS: [Scenario; 2] = [
         inserted_items: 128,
         shared_filter_bits: 2_048,
         query_batch_size: 4_096,
-        build_iterations: 200_000,
-        contains_iterations: 10_000,
+        build_iterations: 3_000_000,
+        contains_iterations: 100_000,
     },
     Scenario {
         name: "scale-4096",
         inserted_items: 4_096,
         shared_filter_bits: 65_536,
         query_batch_size: 16_384,
-        build_iterations: 10_000,
-        contains_iterations: 5_000,
+        build_iterations: 150_000,
+        contains_iterations: 40_000,
     },
 ];
+
+const DEFAULT_SCENARIO: &str = "scale-4096";
 
 fn make_key(id: u64) -> Key {
     let mut bytes = [0u8; 16];
@@ -97,15 +92,7 @@ fn make_key(id: u64) -> Key {
 fn prepare_scenario_data(scenario: Scenario) -> ScenarioData {
     let members: Vec<Key> = (0..scenario.inserted_items as u64).map(make_key).collect();
 
-    let member_queries: Vec<Key> = (0..scenario.query_batch_size)
-        .map(|index| members[index % members.len()])
-        .collect();
-
-    let absent_queries: Vec<Key> = (0..scenario.query_batch_size)
-        .map(|index| make_key(10_000_000 + index as u64))
-        .collect();
-
-    let mixed_queries: Vec<Key> = (0..scenario.query_batch_size)
+    let read_queries: Vec<Key> = (0..scenario.query_batch_size)
         .map(|index| {
             if index % 2 == 0 {
                 members[index % members.len()]
@@ -117,9 +104,7 @@ fn prepare_scenario_data(scenario: Scenario) -> ScenarioData {
 
     ScenarioData {
         members,
-        member_queries,
-        absent_queries,
-        mixed_queries,
+        read_queries,
     }
 }
 
@@ -144,19 +129,9 @@ fn time_build(scenario: Scenario, data: &ScenarioData, iterations: usize) -> (Du
     (start.elapsed(), iterations * scenario.inserted_items)
 }
 
-fn time_contains(
-    scenario: Scenario,
-    data: &ScenarioData,
-    workload: Workload,
-    iterations: usize,
-) -> (Duration, usize, usize) {
+fn time_read(scenario: Scenario, data: &ScenarioData, iterations: usize) -> (Duration, usize, usize) {
     let filter = build_filter(&data.members, scenario);
-    let queries = match workload {
-        Workload::ContainsMember => &data.member_queries,
-        Workload::ContainsAbsent => &data.absent_queries,
-        Workload::ContainsMixed => &data.mixed_queries,
-        Workload::Build => unreachable!("build is not a contains workload"),
-    };
+    let queries = &data.read_queries;
 
     let start = Instant::now();
     let mut total_hits = 0usize;
@@ -175,7 +150,7 @@ fn time_contains(
 
 fn print_result(
     scenario: Scenario,
-    workload: Workload,
+    mode: Mode,
     iterations: usize,
     total_operations: usize,
     duration: Duration,
@@ -184,9 +159,9 @@ fn print_result(
     let ns_per_op = total_ns / total_operations as f64;
 
     println!(
-        "scenario={} workload={} iterations={} total_ops={} total_time={:.3?} ns/op={:.2}",
+        "scenario={} mode={} iterations={} total_ops={} total_time={:.3?} ns/op={:.2}",
         scenario.name,
-        workload.name(),
+        mode.name(),
         iterations,
         total_operations,
         duration,
@@ -196,29 +171,44 @@ fn print_result(
 
 fn print_usage_and_exit() -> ! {
     eprintln!(
-        "usage: cargo bench --bench basic -- [--scenario <name>] [--workload <name>] [--iterations <n>]"
+        "usage: cargo bench --bench basic -- [--mode <name>] [--scenario <name>] [--iterations <n>]"
     );
+    eprintln!("modes: insert, read");
     eprintln!("scenarios: compact-128, scale-4096");
-    eprintln!("workloads: build, contains-member, contains-absent, contains-mixed");
+    eprintln!("defaults: mode=all scenario=scale-4096");
     std::process::exit(2);
 }
 
-fn parse_args() -> (Option<String>, Option<Workload>, Option<usize>) {
+fn parse_args() -> (Option<String>, Option<Mode>, Option<usize>) {
     let mut scenario = None;
-    let mut workload = None;
+    let mut mode = None;
     let mut iterations = None;
     let mut args = env::args().skip(1);
 
     while let Some(arg) = args.next() {
         match arg.as_str() {
             "--bench" => {}
+            "--mode" => {
+                let value = args.next().unwrap_or_else(|| print_usage_and_exit());
+                mode = Mode::parse(&value).or_else(|| {
+                    eprintln!("unknown mode: {value}");
+                    print_usage_and_exit();
+                });
+            }
             "--scenario" => {
                 scenario = Some(args.next().unwrap_or_else(|| print_usage_and_exit()));
             }
             "--workload" => {
                 let value = args.next().unwrap_or_else(|| print_usage_and_exit());
-                workload = Workload::parse(&value).or_else(|| {
-                    eprintln!("unknown workload: {value}");
+                mode = match value.as_str() {
+                    "build" => Some(Mode::Insert),
+                    "contains-mixed" => Some(Mode::Read),
+                    _ => None,
+                }
+                .or_else(|| {
+                    eprintln!(
+                        "unsupported legacy workload: {value} (supported aliases: build, contains-mixed)"
+                    );
                     print_usage_and_exit();
                 });
             }
@@ -237,7 +227,7 @@ fn parse_args() -> (Option<String>, Option<Workload>, Option<usize>) {
         }
     }
 
-    (scenario, workload, iterations)
+    (scenario, mode, iterations)
 }
 
 fn scenario_by_name(name: &str) -> Option<Scenario> {
@@ -248,7 +238,7 @@ fn scenario_by_name(name: &str) -> Option<Scenario> {
 }
 
 fn main() {
-    let (scenario_filter, workload_filter, iteration_override) = parse_args();
+    let (scenario_filter, mode_filter, iteration_override) = parse_args();
 
     let scenarios: Vec<Scenario> = if let Some(name) = scenario_filter.as_deref() {
         vec![scenario_by_name(name).unwrap_or_else(|| {
@@ -256,29 +246,28 @@ fn main() {
             print_usage_and_exit();
         })]
     } else {
-        SCENARIOS.to_vec()
+        vec![scenario_by_name(DEFAULT_SCENARIO).expect("default scenario must exist")]
     };
 
     for scenario in scenarios {
         let data = prepare_scenario_data(scenario);
-        let workloads: Vec<Workload> = if let Some(workload) = workload_filter {
-            vec![workload]
+        let modes: Vec<Mode> = if let Some(mode) = mode_filter {
+            vec![mode]
         } else {
-            Workload::ALL.to_vec()
+            Mode::ALL.to_vec()
         };
 
-        for workload in workloads {
-            match workload {
-                Workload::Build => {
+        for mode in modes {
+            match mode {
+                Mode::Insert => {
                     let iterations = iteration_override.unwrap_or(scenario.build_iterations);
                     let (duration, total_operations) = time_build(scenario, &data, iterations);
-                    print_result(scenario, workload, iterations, total_operations, duration);
+                    print_result(scenario, mode, iterations, total_operations, duration);
                 }
-                Workload::ContainsMember | Workload::ContainsAbsent | Workload::ContainsMixed => {
+                Mode::Read => {
                     let iterations = iteration_override.unwrap_or(scenario.contains_iterations);
-                    let (duration, total_operations, _) =
-                        time_contains(scenario, &data, workload, iterations);
-                    print_result(scenario, workload, iterations, total_operations, duration);
+                    let (duration, total_operations, _) = time_read(scenario, &data, iterations);
+                    print_result(scenario, mode, iterations, total_operations, duration);
                 }
             }
         }
