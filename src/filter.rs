@@ -4,7 +4,7 @@ use crate::hash::hash;
 pub struct Filter {
     k: u64,
     mask: u64,
-    array: Vec<u64>,
+    array: Box<[u64]>,
 }
 
 impl Filter {
@@ -28,7 +28,7 @@ impl Filter {
         Ok(Self {
             k,
             mask: m - 1,
-            array: vec![0u64; words],
+            array: vec![0u64; words].into_boxed_slice(),
         })
     }
 
