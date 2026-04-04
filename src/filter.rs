@@ -22,7 +22,7 @@ impl Filter {
 
         let m = 1u64 << size;
         let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
-        let k = k.max(1);
+        let k = k.clamp(1, 30);
         let words = ((m as usize) + 63) >> 6;
 
         Ok(Self {
