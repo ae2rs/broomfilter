@@ -8,9 +8,16 @@ keywords = ["bloom-filter", "probabilistic", "data-structure", "broom", "maybe"]
 categories = ["data-structures"]
 readme = "README.md"
 
+[profile.bench]
+debug = true
+
 [[bench]]
 harness = false
 name = "comparison"
+
+[[bench]]
+harness = false
+name = "basic"
 
 [dependencies]
 bitvec = "1.0.1"

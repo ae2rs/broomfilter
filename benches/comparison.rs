@@ -1,4 +1,6 @@
-use bloom::{ASMS as _, BloomFilter as LegacyBloom, optimal_num_hashes as legacy_optimal_num_hashes};
+use bloom::{
+    ASMS as _, BloomFilter as LegacyBloom, optimal_num_hashes as legacy_optimal_num_hashes,
+};
 use bloomfilter::Bloom;
 use bloomfilter::reexports::siphasher::sip::SipHasher13;
 use broomfilter::Filter as BroomFilter;
@@ -8,8 +10,8 @@ use serde::Deserialize;
 use std::cmp::Ordering;
 use std::fmt::Write as _;
 use std::fs;
-use std::hint::black_box;
 use std::hash::BuildHasher;
+use std::hint::black_box;
 use std::io;
 use std::path::{Path, PathBuf};
 use std::time::Duration;
@@ -95,9 +97,9 @@ impl Operation {
     fn throughput(self, scenario: Scenario) -> u64 {
         match self {
             Operation::Build => scenario.inserted_items as u64,
-            Operation::ContainsMember
-            | Operation::ContainsAbsent
-            | Operation::ContainsMixed => scenario.query_batch_size as u64,
+            Operation::ContainsMember | Operation::ContainsAbsent | Operation::ContainsMixed => {
+                scenario.query_batch_size as u64
+            }
         }
     }
 }
@@ -206,10 +208,8 @@ fn prepare_scenario_data(scenario: Scenario) -> ScenarioData {
 
 const FASTBLOOM_SEED: u128 = 0x1357_9BDF_2468_ACE0_FEDC_BA98_7654_3210;
 const BLOOMFILTER_SEED: [u8; 32] = [
-    0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE,
-    0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01,
-    0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-    0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+    0x10, 0x32, 0x54, 0x76, 0x98, 0xBA, 0xDC, 0xFE, 0xEF, 0xCD, 0xAB, 0x89, 0x67, 0x45, 0x23, 0x01,
+    0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
 ];
 
 #[derive(Clone, Copy, Default)]
@@ -241,7 +241,8 @@ impl FilterAdapter for BroomAdapter {
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
         let exponent = broom_size_exponent(scenario.shared_filter_bits);
-        let mut filter = BroomFilter::new(exponent, members.len()).expect("unable to create filter");
+        let mut filter =
+            BroomFilter::new(exponent, members.len()).expect("unable to create filter");
 
         for key in members {
             filter.insert(&key.bytes);
@@ -267,10 +268,9 @@ impl FilterAdapter for FastBloomAdapter {
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let mut filter =
-            FastBloom::with_num_bits(scenario.shared_filter_bits)
-                .seed(&FASTBLOOM_SEED)
-                .expected_items(members.len());
+        let mut filter = FastBloom::with_num_bits(scenario.shared_filter_bits)
+            .seed(&FASTBLOOM_SEED)
+            .expected_items(members.len());
 
         for key in members {
             filter.insert(&key.bytes);
@@ -380,10 +380,7 @@ fn print_accuracy_report(scenario: Scenario, reports: &[AccuracyReport]) {
     );
     println!(
         "{:<14} {:>8} {:>12} {:>12}  config",
-        "library",
-        "false-",
-        "false+",
-        "fp-rate",
+        "library", "false-", "false+", "fp-rate",
     );
 
     for report in reports {
@@ -626,7 +623,8 @@ fn best_accuracy_report<'a>(reports: &'a [AccuracyReport]) -> Option<&'a Accurac
 }
 
 fn render_precision_table(markdown: &mut String, scenario_result: &ScenarioResult) {
-    let best_library = best_accuracy_report(&scenario_result.accuracy_reports).map(|report| report.library);
+    let best_library =
+        best_accuracy_report(&scenario_result.accuracy_reports).map(|report| report.library);
 
     markdown.push_str("| Library | False negatives | False positives | FP rate | Config |\n");
     markdown.push_str("| --- | ---: | ---: | ---: | --- |\n");
@@ -678,22 +676,22 @@ fn render_performance_table(
         .map(|report| report.mean_ns)
         .unwrap_or(reports[0].mean_ns);
 
-    if let Some(link) = reports.iter().find_map(|report| report.group_link.as_deref()) {
+    if let Some(link) = reports
+        .iter()
+        .find_map(|report| report.group_link.as_deref())
+    {
         let _ = writeln!(markdown, "Group report: {}  ", link);
     }
     let _ = writeln!(
         markdown,
         "Lower is better. All filters use the same {}-bit memory budget in this scenario. Build is normalized per inserted item; contains workloads are normalized per query over {} operations.\n",
-        scenario.shared_filter_bits,
-        scenario.query_batch_size
+        scenario.shared_filter_bits, scenario.query_batch_size
     );
 
     markdown.push_str(
         "| Rank | Library | Mean (95% CI) | Normalized cost | Vs broomfilter | Precision tag | Plot |\n",
     );
-    markdown.push_str(
-        "| ---: | --- | --- | ---: | ---: | --- | --- |\n",
-    );
+    markdown.push_str("| ---: | --- | --- | ---: | ---: | --- | --- |\n");
 
     for (index, report) in reports.iter().enumerate() {
         let library = if report.library == "broomfilter" {
@@ -720,7 +718,10 @@ fn render_performance_table(
     markdown.push('\n');
 }
 
-fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResult]) -> io::Result<String> {
+fn render_perf_report(
+    output_directory: &Path,
+    scenario_results: &[ScenarioResult],
+) -> io::Result<String> {
     let mut markdown = String::new();
     markdown.push_str("# Performance Report\n\n");
     markdown.push_str(
@@ -731,7 +732,9 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
     if let Some(link) = report_link(overall_report, "Criterion dashboard") {
         let _ = writeln!(markdown, "- Overall report: {}", link);
     }
-    markdown.push_str("- Benchmarks covered: build, present lookups, absent lookups, and mixed lookups\n");
+    markdown.push_str(
+        "- Benchmarks covered: build, present lookups, absent lookups, and mixed lookups\n",
+    );
     markdown.push_str("- Comparison set: mutable Bloom-style filters that can be configured to the same exact bit budget through their public APIs\n");
     markdown.push_str("- Precision covered: false negatives on inserted keys and false positives over 100,000 deterministic absent-key probes per scenario\n\n");
 
@@ -808,18 +811,18 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
     for (scenario_result, operation_reports) in performance_by_scenario {
         let scenario = scenario_result.scenario;
         let _ = writeln!(markdown, "## Scenario `{}`\n", scenario.name);
-        let _ = writeln!(
-            markdown,
-            "- Inserted items: {}",
-            scenario.inserted_items,
-        );
+        let _ = writeln!(markdown, "- Inserted items: {}", scenario.inserted_items,);
         let _ = writeln!(
             markdown,
             "- Shared filter size: {} bits ({} bytes)",
             scenario.shared_filter_bits,
             scenario.shared_filter_bits / 8,
         );
-        let _ = writeln!(markdown, "- Query batch size: {}", scenario.query_batch_size);
+        let _ = writeln!(
+            markdown,
+            "- Query batch size: {}",
+            scenario.query_batch_size
+        );
         let _ = writeln!(
             markdown,
             "- Precision probes: {}",
@@ -839,7 +842,10 @@ fn render_perf_report(output_directory: &Path, scenario_results: &[ScenarioResul
     Ok(markdown)
 }
 
-fn write_perf_report(output_directory: &Path, scenario_results: &[ScenarioResult]) -> io::Result<()> {
+fn write_perf_report(
+    output_directory: &Path,
+    scenario_results: &[ScenarioResult],
+) -> io::Result<()> {
     let report = render_perf_report(output_directory, scenario_results)?;
     fs::write("PERF_REPORT.md", report)
 }
