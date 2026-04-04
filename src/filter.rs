@@ -1,6 +1,7 @@
 use crate::error::Error;
 use crate::hash::hash;
 
+#[derive(Clone, Debug)]
 pub struct Filter {
     k: u64,
     mask: u64,
