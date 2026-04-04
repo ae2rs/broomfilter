@@ -118,6 +118,15 @@ impl Filter {
     }
 }
 
+const _: () = {
+    #[allow(dead_code)]
+    fn assert_send_sync<T: Send + Sync>() {}
+    #[allow(dead_code)]
+    fn check() {
+        assert_send_sync::<Filter>();
+    }
+};
+
 #[cfg(test)]
 mod tests {
     use super::*;
