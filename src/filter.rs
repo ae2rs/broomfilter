@@ -5,7 +5,8 @@ use crate::hash::hash;
 pub struct Filter {
     k: u64,
     m: u64,
-    mask: Option<u64>,
+    /// `m - 1` when m is a power of 2 (bitmask fast path), `0` otherwise.
+    mask: u64,
     array: Box<[u64]>,
 }
 
@@ -25,7 +26,7 @@ impl Filter {
         }
 
         let m = 1u64 << size;
-        Self::build(m, n, Some(m - 1))
+        Self::build(m, n, m - 1)
     }
 
     /// Creates a new filter optimized for `n` expected items with a desired
@@ -57,7 +58,7 @@ impl Filter {
         let m = (-(n as f64) * fpr.ln() / (std::f64::consts::LN_2.powi(2))).ceil() as u64;
         let m = m.max(2);
 
-        Self::build(m, n, None)
+        Self::build(m, n, 0)
     }
 
     fn validate_fpr_args(n: usize, fpr: f64) -> Result<(), Error> {
@@ -74,7 +75,7 @@ impl Filter {
         Ok(())
     }
 
-    fn build(m: u64, n: usize, mask: Option<u64>) -> Result<Self, Error> {
+    fn build(m: u64, n: usize, mask: u64) -> Result<Self, Error> {
         let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
         let k = k.clamp(1, 30);
         let words = ((m as usize) + 63) >> 6;
@@ -88,20 +89,14 @@ impl Filter {
     }
 
     #[inline]
-    fn index(&self, raw: u64) -> u64 {
-        match self.mask {
-            Some(mask) => raw & mask,
-            None => raw % self.m,
-        }
-    }
-
-    #[inline]
     pub fn insert(&mut self, value: impl AsRef<[u8]>) {
         let (h1, h2) = hash(value);
+        let mask = self.mask;
 
         for i in 0..self.k {
-            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
-            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
+            let raw = h1.wrapping_add(i.wrapping_mul(h2));
+            let idx = if mask != 0 { raw & mask } else { raw % self.m };
+            // SAFETY: idx < m, and m <= array.len() * 64.
             unsafe {
                 let word = self.array.get_unchecked_mut((idx >> 6) as usize);
                 *word |= 1 << (idx & 63);
@@ -112,10 +107,12 @@ impl Filter {
     #[inline]
     pub fn contains(&self, value: impl AsRef<[u8]>) -> bool {
         let (h1, h2) = hash(value);
+        let mask = self.mask;
 
         for i in 0..self.k {
-            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
-            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
+            let raw = h1.wrapping_add(i.wrapping_mul(h2));
+            let idx = if mask != 0 { raw & mask } else { raw % self.m };
+            // SAFETY: idx < m, and m <= array.len() * 64.
             unsafe {
                 if *self.array.get_unchecked((idx >> 6) as usize) & (1 << (idx & 63)) == 0 {
                     return false;
