@@ -7,23 +7,20 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Downloads](https://img.shields.io/crates/d/broomfilter.svg)](https://crates.io/crates/broomfilter)
 
-> *A Bloomfilter that sweeps away your certainty, one hash at a time.*
-
-A bloom filter implementation in Rust. Named `broomfilter` because it .
+A (pretty fast) bloom filter implementation in Rust.
 
 ---
 
 ## 🤔 What is this?
 
 A bloom filter is a probabilistic data structure that can tell you:
-- ❌ **"Definitely not in the set"** — 100% accurate, take it to the bank
-- 🤷 **"Probably in the set"** — maybe, who knows, trust issues
+- ❌ **"Definitely not in the set"** — 100% accurate
+- 🤷 **"Probably in the set"** — maybe, who knows
 
 Think of it as that friend who says "I'm *pretty sure* I locked the door."
-You can trust them when they say they didn't, but when they say they did...
-you might want to go check.
+You can trust them when they say they didn't, but when they say they did... you might want to go check.
 
-### 🧹 How the broom sweeps
+### 🧹 Theory of broom sweeping (simplified)
 
 ```
     item ──→ [ hash hash hash ] ──→ flip bits in the array
@@ -38,9 +35,8 @@ you might want to go check.
 
 ## 💡 Why does this exist?
 
-Because I wanted to learn what a bloom filter actually is instead of just
-nodding along when someone mentions one in a meeting. Turns out it's a big
-array of bits and some hashing. Who knew? (Everyone. Everyone knew.) 🧹
+Because I wanted to learn how a bloom filter actually worked instead of just reciting the definition in tech interviews.
+Turns out its super fun to optimize!
 
 ---
 
@@ -65,9 +61,9 @@ assert!(!filter.contains("goodbye")); // false — definitely ❌
 
 ## 🏗️ Status
 
-> ⚠️ **Work in progress** — handle with care (or don't, I'm a README not a cop)
+> ⚠️ **Work in progress** — handle with care (or don't, I'm a dev, not a cop)
 
-It works, it has benchmarks, it *probably* won't eat your data. But then again,
+It works, it has benchmarks, it *probably* won't break. But then again,
 the whole point of a bloom filter is that you can never be 100% sure about anything.
 
 | Feature | Status |
@@ -82,5 +78,4 @@ the whole point of a bloom filter is that you can never be 100% sure about anyth
 
 ## 📜 License
 
-MIT — do whatever you want with it, just don't blame me when
-`contains()` lies to you. That's a feature, not a bug. 🧹
+MIT — do whatever you want with it, just don't blame me when it breaks.
