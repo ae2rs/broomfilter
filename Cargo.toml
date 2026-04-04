@@ -32,8 +32,6 @@ required-features = ["benchmarks"]
 
 [dependencies]
 bitvec = "1.0.1"
-rand = "0.10.0"
-sha2 = "0.10.9"
 thiserror = "2.0.18"
 xxhash-rust = { version = "0.8.8", features = ["xxh3"] }
 
