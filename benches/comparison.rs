@@ -30,6 +30,12 @@ struct Scenario {
     precision_queries: usize,
 }
 
+impl Scenario {
+    fn bits_per_item(self) -> f64 {
+        self.shared_filter_bits as f64 / self.inserted_items as f64
+    }
+}
+
 struct ScenarioData {
     members: Vec<Key>,
     member_queries: Vec<Key>,
@@ -147,7 +153,7 @@ struct FastBloomAdapter;
 struct BloomFilterCrateAdapter;
 struct BloomCrateAdapter;
 
-const SCENARIOS: [Scenario; 2] = [
+const SCENARIOS: [Scenario; 6] = [
     Scenario {
         name: "compact-128",
         inserted_items: 128,
@@ -160,6 +166,34 @@ const SCENARIOS: [Scenario; 2] = [
         inserted_items: 4_096,
         shared_filter_bits: 65_536,
         query_batch_size: 16_384,
+        precision_queries: 100_000,
+    },
+    Scenario {
+        name: "large-65536-16bpi",
+        inserted_items: 65_536,
+        shared_filter_bits: 1_048_576,
+        query_batch_size: 65_536,
+        precision_queries: 100_000,
+    },
+    Scenario {
+        name: "large-65536-8bpi",
+        inserted_items: 65_536,
+        shared_filter_bits: 524_288,
+        query_batch_size: 65_536,
+        precision_queries: 100_000,
+    },
+    Scenario {
+        name: "large-65536-4bpi",
+        inserted_items: 65_536,
+        shared_filter_bits: 262_144,
+        query_batch_size: 65_536,
+        precision_queries: 100_000,
+    },
+    Scenario {
+        name: "stress-65536-2bpi",
+        inserted_items: 65_536,
+        shared_filter_bits: 131_072,
+        query_batch_size: 65_536,
         precision_queries: 100_000,
     },
 ];
@@ -372,10 +406,11 @@ fn measure_accuracy<T: FilterAdapter>(scenario: Scenario, data: &ScenarioData) -
 
 fn print_accuracy_report(scenario: Scenario, reports: &[AccuracyReport]) {
     println!(
-        "\n=== Precision summary: {} (inserted={}, shared bits={}, precision queries={}) ===",
+        "\n=== Precision summary: {} (inserted={}, shared bits={}, bits/item={:.2}, precision queries={}) ===",
         scenario.name,
         scenario.inserted_items,
         scenario.shared_filter_bits,
+        scenario.bits_per_item(),
         scenario.precision_queries,
     );
     println!(
@@ -511,9 +546,9 @@ fn criterion_benchmark(c: &mut Criterion) -> Vec<ScenarioResult> {
 
 fn configured_criterion() -> Criterion {
     Criterion::default()
-        .warm_up_time(Duration::from_secs(1))
-        .measurement_time(Duration::from_secs(2))
-        .sample_size(20)
+        .warm_up_time(Duration::from_millis(500))
+        .measurement_time(Duration::from_secs(1))
+        .sample_size(10)
         .configure_from_args()
 }
 
@@ -739,8 +774,8 @@ fn render_perf_report(
     markdown.push_str("- Precision covered: false negatives on inserted keys and false positives over 100,000 deterministic absent-key probes per scenario\n\n");
 
     markdown.push_str("## Scenario Summary\n\n");
-    markdown.push_str("| Scenario | Most precise | Fastest build | Fastest present lookup | Fastest absent lookup | Fastest mixed lookup |\n");
-    markdown.push_str("| --- | --- | --- | --- | --- | --- |\n");
+    markdown.push_str("| Scenario | Bits/item | Most precise | Fastest build | Fastest present lookup | Fastest absent lookup | Fastest mixed lookup |\n");
+    markdown.push_str("| --- | ---: | --- | --- | --- | --- | --- |\n");
 
     let mut performance_by_scenario = Vec::new();
 
@@ -794,8 +829,9 @@ fn render_perf_report(
 
         let _ = writeln!(
             markdown,
-            "| `{}` | {} | {} | {} | {} | {} |",
+            "| `{}` | {:.2} | {} | {} | {} | {} | {} |",
             scenario_result.scenario.name,
+            scenario_result.scenario.bits_per_item(),
             most_precise,
             fastest_build,
             fastest_member,
@@ -817,6 +853,11 @@ fn render_perf_report(
             "- Shared filter size: {} bits ({} bytes)",
             scenario.shared_filter_bits,
             scenario.shared_filter_bits / 8,
+        );
+        let _ = writeln!(
+            markdown,
+            "- Bits per inserted item: {:.2}",
+            scenario.bits_per_item(),
         );
         let _ = writeln!(
             markdown,
