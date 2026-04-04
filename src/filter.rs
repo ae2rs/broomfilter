@@ -35,6 +35,11 @@ impl Filter {
 
     /// Creates a new filter optimized for `n` expected items with a desired
     /// false positive rate `fpr` (e.g. 0.01 for 1%).
+    ///
+    /// The filter size is rounded up to the next power of 2, so the actual
+    /// false positive rate may be significantly better than requested (at the
+    /// cost of extra memory). Use [`from_fpr_exact`](Self::from_fpr_exact)
+    /// for a tighter memory fit with non-power-of-2 sizing.
     pub fn from_fpr(n: usize, fpr: f64) -> Result<Self, Error> {
         if n == 0 {
             return Err(Error::InvalidArgument(
