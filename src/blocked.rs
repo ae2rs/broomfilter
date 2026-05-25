@@ -58,9 +58,18 @@ unsafe fn neon_insert(block_ptr: *mut u64, masks: &[u64; BLOCK_WORDS]) {
         let m3 = vld1q_u64(masks.as_ptr().add(6));
 
         vst1q_u64(block_ptr, vorrq_u64(vld1q_u64(block_ptr as *const u64), m0));
-        vst1q_u64(block_ptr.add(2), vorrq_u64(vld1q_u64(block_ptr.add(2) as *const u64), m1));
-        vst1q_u64(block_ptr.add(4), vorrq_u64(vld1q_u64(block_ptr.add(4) as *const u64), m2));
-        vst1q_u64(block_ptr.add(6), vorrq_u64(vld1q_u64(block_ptr.add(6) as *const u64), m3));
+        vst1q_u64(
+            block_ptr.add(2),
+            vorrq_u64(vld1q_u64(block_ptr.add(2) as *const u64), m1),
+        );
+        vst1q_u64(
+            block_ptr.add(4),
+            vorrq_u64(vld1q_u64(block_ptr.add(4) as *const u64), m2),
+        );
+        vst1q_u64(
+            block_ptr.add(6),
+            vorrq_u64(vld1q_u64(block_ptr.add(6) as *const u64), m3),
+        );
     }
 }
 
@@ -104,10 +113,11 @@ impl BlockedFilter {
         let num_blocks = (bits as u64).div_ceil(BLOCK_BITS);
         let num_blocks = num_blocks.max(1);
         let total_words = num_blocks as usize * BLOCK_WORDS;
-        let block_mask = num_blocks
-            .is_power_of_two()
-            .then_some(num_blocks - 1)
-            .unwrap_or(0);
+        let block_mask = if num_blocks.is_power_of_two() {
+            num_blocks - 1
+        } else {
+            0
+        };
 
         // k is computed from the effective total bits.
         let m = num_blocks * BLOCK_BITS;

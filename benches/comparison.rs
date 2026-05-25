@@ -186,7 +186,8 @@ impl FilterAdapter for CppBlockedAdapter {
     }
 
     fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
-        let ptr = unsafe { cpp_bf_create(scenario.shared_filter_bits as u64, members.len() as u64) };
+        let ptr =
+            unsafe { cpp_bf_create(scenario.shared_filter_bits as u64, members.len() as u64) };
         assert!(!ptr.is_null(), "cpp_bf_create returned null");
         for key in members {
             let (h1, h2) = broomfilter::hash_bytes(&key.bytes);
