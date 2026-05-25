@@ -5,7 +5,8 @@ use crate::hash::hash;
 pub struct Filter {
     k: u64,
     m: u64,
-    mask: Option<u64>,
+    /// `m - 1` when m is a power of 2 (bitmask fast path), `0` otherwise.
+    mask: u64,
     array: Box<[u64]>,
 }
 
@@ -25,7 +26,7 @@ impl Filter {
         }
 
         let m = 1u64 << size;
-        Self::build(m, n, Some(m - 1))
+        Self::build(m, n, m - 1)
     }
 
     /// Creates a new filter optimized for `n` expected items with a desired
@@ -57,7 +58,7 @@ impl Filter {
         let m = (-(n as f64) * fpr.ln() / (std::f64::consts::LN_2.powi(2))).ceil() as u64;
         let m = m.max(2);
 
-        Self::build(m, n, None)
+        Self::build(m, n, 0)
     }
 
     fn validate_fpr_args(n: usize, fpr: f64) -> Result<(), Error> {
@@ -74,7 +75,7 @@ impl Filter {
         Ok(())
     }
 
-    fn build(m: u64, n: usize, mask: Option<u64>) -> Result<Self, Error> {
+    fn build(m: u64, n: usize, mask: u64) -> Result<Self, Error> {
         let k = ((m as f64 / n as f64) * std::f64::consts::LN_2).round() as u64;
         let k = k.clamp(1, 30);
         let words = ((m as usize) + 63) >> 6;
@@ -88,42 +89,29 @@ impl Filter {
     }
 
     #[inline]
-    fn index(&self, raw: u64) -> u64 {
-        match self.mask {
-            Some(mask) => raw & mask,
-            None => raw % self.m,
-        }
-    }
-
-    #[inline]
     pub fn insert(&mut self, value: impl AsRef<[u8]>) {
-        let (h1, h2) = hash(value);
+        let (h1, h2) = hash(value.as_ref());
 
-        for i in 0..self.k {
-            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
-            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
-            unsafe {
-                let word = self.array.get_unchecked_mut((idx >> 6) as usize);
-                *word |= 1 << (idx & 63);
+        unsafe {
+            if self.mask != 0 {
+                self.insert_masked(h1, h2);
+            } else {
+                self.insert_modulo(h1, h2);
             }
         }
     }
 
     #[inline]
     pub fn contains(&self, value: impl AsRef<[u8]>) -> bool {
-        let (h1, h2) = hash(value);
+        let (h1, h2) = hash(value.as_ref());
 
-        for i in 0..self.k {
-            let idx = self.index(h1.wrapping_add(i.wrapping_mul(h2)));
-            // SAFETY: index() guarantees idx < m, and m <= array.len() * 64.
-            unsafe {
-                if *self.array.get_unchecked((idx >> 6) as usize) & (1 << (idx & 63)) == 0 {
-                    return false;
-                }
+        unsafe {
+            if self.mask != 0 {
+                self.contains_masked(h1, h2)
+            } else {
+                self.contains_modulo(h1, h2)
             }
         }
-
-        true
     }
 
     /// Resets the filter to empty without reallocating.
@@ -151,6 +139,86 @@ impl Filter {
             *a |= *b;
         }
         Ok(())
+    }
+
+    #[inline(always)]
+    unsafe fn insert_masked(&mut self, h1: u64, h2: u64) {
+        let mut raw = h1;
+        let mask = self.mask;
+        let words = self.array.as_mut_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw & mask;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                *word |= 1u64 << (idx & 63);
+            }
+            raw = raw.wrapping_add(h2);
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn insert_modulo(&mut self, h1: u64, h2: u64) {
+        let mut raw = h1;
+        let m = self.m;
+        let words = self.array.as_mut_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw % m;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                *word |= 1u64 << (idx & 63);
+            }
+            raw = raw.wrapping_add(h2);
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn contains_masked(&self, h1: u64, h2: u64) -> bool {
+        let mut raw = h1;
+        let mask = self.mask;
+        let words = self.array.as_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw & mask;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                if *word & (1u64 << (idx & 63)) == 0 {
+                    return false;
+                }
+            }
+            raw = raw.wrapping_add(h2);
+        }
+
+        true
+    }
+
+    #[inline(always)]
+    unsafe fn contains_modulo(&self, h1: u64, h2: u64) -> bool {
+        let mut raw = h1;
+        let m = self.m;
+        let words = self.array.as_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw % m;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                if *word & (1u64 << (idx & 63)) == 0 {
+                    return false;
+                }
+            }
+            raw = raw.wrapping_add(h2);
+        }
+
+        true
     }
 }
 

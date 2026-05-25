@@ -3,6 +3,7 @@ use bloom::{
 };
 use bloomfilter::Bloom;
 use bloomfilter::reexports::siphasher::sip::SipHasher13;
+use broomfilter::BlockedFilter as BroomBlocked;
 use broomfilter::Filter as BroomFilter;
 use criterion::{BenchmarkId, Criterion, Throughput};
 use fastbloom::BloomFilter as FastBloom;
@@ -149,6 +150,7 @@ trait FilterAdapter {
 }
 
 struct BroomAdapter;
+struct BroomBlockedAdapter;
 struct FastBloomAdapter;
 struct BloomFilterCrateAdapter;
 struct BloomCrateAdapter;
@@ -277,6 +279,33 @@ impl FilterAdapter for BroomAdapter {
         let exponent = broom_size_exponent(scenario.shared_filter_bits);
         let mut filter =
             BroomFilter::new(exponent, members.len()).expect("unable to create filter");
+
+        for key in members {
+            filter.insert(&key.bytes);
+        }
+
+        filter
+    }
+
+    fn contains(filter: &Self::Filter, key: &Key) -> bool {
+        filter.contains(&key.bytes)
+    }
+}
+
+impl FilterAdapter for BroomBlockedAdapter {
+    type Filter = BroomBlocked;
+
+    fn name() -> &'static str {
+        "broomfilter-blocked"
+    }
+
+    fn config(scenario: Scenario) -> String {
+        format!("{} bits", scenario.shared_filter_bits)
+    }
+
+    fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
+        let mut filter = BroomBlocked::new(scenario.shared_filter_bits, members.len())
+            .expect("unable to create blocked filter");
 
         for key in members {
             filter.insert(&key.bytes);
@@ -508,6 +537,7 @@ fn bench_adapter<T: FilterAdapter>(
 fn collect_accuracy_reports(scenario: Scenario, data: &ScenarioData) -> Vec<AccuracyReport> {
     vec![
         measure_accuracy::<BroomAdapter>(scenario, data),
+        measure_accuracy::<BroomBlockedAdapter>(scenario, data),
         measure_accuracy::<FastBloomAdapter>(scenario, data),
         measure_accuracy::<BloomFilterCrateAdapter>(scenario, data),
         measure_accuracy::<BloomCrateAdapter>(scenario, data),
@@ -526,6 +556,9 @@ fn criterion_benchmark(c: &mut Criterion) -> Vec<ScenarioResult> {
         for accuracy in &accuracy_reports {
             match accuracy.library {
                 "broomfilter" => bench_adapter::<BroomAdapter>(c, scenario, &data, accuracy),
+                "broomfilter-blocked" => {
+                    bench_adapter::<BroomBlockedAdapter>(c, scenario, &data, accuracy)
+                }
                 "fastbloom" => bench_adapter::<FastBloomAdapter>(c, scenario, &data, accuracy),
                 "bloomfilter" => {
                     bench_adapter::<BloomFilterCrateAdapter>(c, scenario, &data, accuracy)
