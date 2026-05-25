@@ -90,37 +90,28 @@ impl Filter {
 
     #[inline]
     pub fn insert(&mut self, value: impl AsRef<[u8]>) {
-        let (h1, h2) = hash(value);
-        let mask = self.mask;
+        let (h1, h2) = hash(value.as_ref());
 
-        for i in 0..self.k {
-            let raw = h1.wrapping_add(i.wrapping_mul(h2));
-            let idx = if mask != 0 { raw & mask } else { raw % self.m };
-            // SAFETY: idx < m, and m <= array.len() * 64.
-            unsafe {
-                let word = self.array.get_unchecked_mut((idx >> 6) as usize);
-                *word |= 1 << (idx & 63);
+        unsafe {
+            if self.mask != 0 {
+                self.insert_masked(h1, h2);
+            } else {
+                self.insert_modulo(h1, h2);
             }
         }
     }
 
     #[inline]
     pub fn contains(&self, value: impl AsRef<[u8]>) -> bool {
-        let (h1, h2) = hash(value);
-        let mask = self.mask;
+        let (h1, h2) = hash(value.as_ref());
 
-        for i in 0..self.k {
-            let raw = h1.wrapping_add(i.wrapping_mul(h2));
-            let idx = if mask != 0 { raw & mask } else { raw % self.m };
-            // SAFETY: idx < m, and m <= array.len() * 64.
-            unsafe {
-                if *self.array.get_unchecked((idx >> 6) as usize) & (1 << (idx & 63)) == 0 {
-                    return false;
-                }
+        unsafe {
+            if self.mask != 0 {
+                self.contains_masked(h1, h2)
+            } else {
+                self.contains_modulo(h1, h2)
             }
         }
-
-        true
     }
 
     /// Resets the filter to empty without reallocating.
@@ -148,6 +139,86 @@ impl Filter {
             *a |= *b;
         }
         Ok(())
+    }
+
+    #[inline(always)]
+    unsafe fn insert_masked(&mut self, h1: u64, h2: u64) {
+        let mut raw = h1;
+        let mask = self.mask;
+        let words = self.array.as_mut_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw & mask;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                *word |= 1u64 << (idx & 63);
+            }
+            raw = raw.wrapping_add(h2);
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn insert_modulo(&mut self, h1: u64, h2: u64) {
+        let mut raw = h1;
+        let m = self.m;
+        let words = self.array.as_mut_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw % m;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                *word |= 1u64 << (idx & 63);
+            }
+            raw = raw.wrapping_add(h2);
+        }
+    }
+
+    #[inline(always)]
+    unsafe fn contains_masked(&self, h1: u64, h2: u64) -> bool {
+        let mut raw = h1;
+        let mask = self.mask;
+        let words = self.array.as_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw & mask;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                if *word & (1u64 << (idx & 63)) == 0 {
+                    return false;
+                }
+            }
+            raw = raw.wrapping_add(h2);
+        }
+
+        true
+    }
+
+    #[inline(always)]
+    unsafe fn contains_modulo(&self, h1: u64, h2: u64) -> bool {
+        let mut raw = h1;
+        let m = self.m;
+        let words = self.array.as_ptr();
+
+        for _ in 0..self.k {
+            let idx = raw % m;
+            // SAFETY: idx < m and the caller only dispatches here when the
+            // backing array is sized for m bits.
+            unsafe {
+                let word = words.add((idx >> 6) as usize);
+                if *word & (1u64 << (idx & 63)) == 0 {
+                    return false;
+                }
+            }
+            raw = raw.wrapping_add(h2);
+        }
+
+        true
     }
 }
 
