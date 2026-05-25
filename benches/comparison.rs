@@ -154,6 +154,52 @@ struct BroomBlockedAdapter;
 struct FastBloomAdapter;
 struct BloomFilterCrateAdapter;
 struct BloomCrateAdapter;
+struct CppBlockedAdapter;
+
+unsafe extern "C" {
+    fn cpp_bf_create(bits: u64, n: u64) -> *mut std::ffi::c_void;
+    fn cpp_bf_destroy(filter: *mut std::ffi::c_void);
+    fn cpp_bf_insert_hashed(filter: *mut std::ffi::c_void, h1: u64, h2: u64);
+    fn cpp_bf_contains_hashed(filter: *const std::ffi::c_void, h1: u64, h2: u64) -> bool;
+}
+
+struct CppBlockedFilter(*mut std::ffi::c_void);
+
+impl Drop for CppBlockedFilter {
+    fn drop(&mut self) {
+        unsafe { cpp_bf_destroy(self.0) };
+    }
+}
+
+// Safety: the filter is heap-allocated and exclusively owned.
+unsafe impl Send for CppBlockedFilter {}
+
+impl FilterAdapter for CppBlockedAdapter {
+    type Filter = CppBlockedFilter;
+
+    fn name() -> &'static str {
+        "cpp-blocked"
+    }
+
+    fn config(scenario: Scenario) -> String {
+        format!("{} bits", scenario.shared_filter_bits)
+    }
+
+    fn build(members: &[Key], scenario: Scenario) -> Self::Filter {
+        let ptr = unsafe { cpp_bf_create(scenario.shared_filter_bits as u64, members.len() as u64) };
+        assert!(!ptr.is_null(), "cpp_bf_create returned null");
+        for key in members {
+            let (h1, h2) = broomfilter::hash_bytes(&key.bytes);
+            unsafe { cpp_bf_insert_hashed(ptr, h1, h2) };
+        }
+        CppBlockedFilter(ptr)
+    }
+
+    fn contains(filter: &Self::Filter, key: &Key) -> bool {
+        let (h1, h2) = broomfilter::hash_bytes(&key.bytes);
+        unsafe { cpp_bf_contains_hashed(filter.0, h1, h2) }
+    }
+}
 
 const SCENARIOS: [Scenario; 6] = [
     Scenario {
@@ -538,6 +584,7 @@ fn collect_accuracy_reports(scenario: Scenario, data: &ScenarioData) -> Vec<Accu
     vec![
         measure_accuracy::<BroomAdapter>(scenario, data),
         measure_accuracy::<BroomBlockedAdapter>(scenario, data),
+        measure_accuracy::<CppBlockedAdapter>(scenario, data),
         measure_accuracy::<FastBloomAdapter>(scenario, data),
         measure_accuracy::<BloomFilterCrateAdapter>(scenario, data),
         measure_accuracy::<BloomCrateAdapter>(scenario, data),
@@ -559,6 +606,7 @@ fn criterion_benchmark(c: &mut Criterion) -> Vec<ScenarioResult> {
                 "broomfilter-blocked" => {
                     bench_adapter::<BroomBlockedAdapter>(c, scenario, &data, accuracy)
                 }
+                "cpp-blocked" => bench_adapter::<CppBlockedAdapter>(c, scenario, &data, accuracy),
                 "fastbloom" => bench_adapter::<FastBloomAdapter>(c, scenario, &data, accuracy),
                 "bloomfilter" => {
                     bench_adapter::<BloomFilterCrateAdapter>(c, scenario, &data, accuracy)
