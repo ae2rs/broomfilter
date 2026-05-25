@@ -6,6 +6,69 @@ const BLOCK_WORDS: usize = 8;
 /// Number of bits per block (512).
 const BLOCK_BITS: u64 = (BLOCK_WORDS as u64) * 64;
 
+// ── ARM NEON (aarch64) ──────────────────────────────────────────────────────
+//
+// A 512-bit block is exactly 4 × uint64x2_t NEON registers, so `contains`
+// and `insert` each collapse to 4 load/op/store pairs with no branch inside
+// the hot loop.
+
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "neon")]
+#[inline]
+/// Returns `true` iff every bit required by `masks` is set in the block
+/// starting at `block_ptr` (8 consecutive `u64` words).
+unsafe fn neon_contains(block_ptr: *const u64, masks: &[u64; BLOCK_WORDS]) -> bool {
+    use std::arch::aarch64::*;
+
+    // SAFETY: caller guarantees block_ptr points to BLOCK_WORDS valid u64s;
+    // masks is a stack-allocated [u64; 8].
+    unsafe {
+        let b0 = vld1q_u64(block_ptr);
+        let b1 = vld1q_u64(block_ptr.add(2));
+        let b2 = vld1q_u64(block_ptr.add(4));
+        let b3 = vld1q_u64(block_ptr.add(6));
+
+        let m0 = vld1q_u64(masks.as_ptr());
+        let m1 = vld1q_u64(masks.as_ptr().add(2));
+        let m2 = vld1q_u64(masks.as_ptr().add(4));
+        let m3 = vld1q_u64(masks.as_ptr().add(6));
+
+        // vbicq_u64(a, b) = a & !b — bits required by mask but absent from block.
+        let missing = vorrq_u64(
+            vorrq_u64(vbicq_u64(m0, b0), vbicq_u64(m1, b1)),
+            vorrq_u64(vbicq_u64(m2, b2), vbicq_u64(m3, b3)),
+        );
+        (vgetq_lane_u64::<0>(missing) | vgetq_lane_u64::<1>(missing)) == 0
+    }
+}
+
+#[cfg(target_arch = "aarch64")]
+#[target_feature(enable = "neon")]
+#[inline]
+/// Sets every bit indicated by `masks` in the block starting at `block_ptr`.
+unsafe fn neon_insert(block_ptr: *mut u64, masks: &[u64; BLOCK_WORDS]) {
+    use std::arch::aarch64::*;
+
+    // SAFETY: caller guarantees block_ptr points to BLOCK_WORDS valid u64s;
+    // masks is a stack-allocated [u64; 8].
+    unsafe {
+        let m0 = vld1q_u64(masks.as_ptr());
+        let m1 = vld1q_u64(masks.as_ptr().add(2));
+        let m2 = vld1q_u64(masks.as_ptr().add(4));
+        let m3 = vld1q_u64(masks.as_ptr().add(6));
+
+        vst1q_u64(block_ptr, vorrq_u64(vld1q_u64(block_ptr as *const u64), m0));
+        vst1q_u64(block_ptr.add(2), vorrq_u64(vld1q_u64(block_ptr.add(2) as *const u64), m1));
+        vst1q_u64(block_ptr.add(4), vorrq_u64(vld1q_u64(block_ptr.add(4) as *const u64), m2));
+        vst1q_u64(block_ptr.add(6), vorrq_u64(vld1q_u64(block_ptr.add(6) as *const u64), m3));
+    }
+}
+
+// ── x86-64 (AVX2 / AVX-512) ────────────────────────────────────────────────
+// TODO: add x86_64 SIMD paths when benchmarking on an x86 host.
+
+// ────────────────────────────────────────────────────────────────────────────
+
 /// A cache-line-blocked bloom filter.
 ///
 /// All `k` bit probes for a given item land in the same 512-bit (64-byte)
@@ -92,7 +155,7 @@ impl BlockedFilter {
 
     #[inline]
     pub fn insert(&mut self, value: impl AsRef<[u8]>) {
-        let (h1, h2) = hash(value);
+        let (h1, h2) = hash(value.as_ref());
         let block_idx = (if self.block_mask != 0 {
             h1 & self.block_mask
         } else {
@@ -104,15 +167,21 @@ impl BlockedFilter {
         // SAFETY: block_idx is at most (num_blocks - 1) * BLOCK_WORDS,
         // so block_idx + BLOCK_WORDS <= array.len().
         unsafe {
+            let block_ptr = self.array.get_unchecked_mut(block_idx) as *mut u64;
+
+            #[cfg(target_arch = "aarch64")]
+            neon_insert(block_ptr, &masks);
+
+            #[cfg(not(target_arch = "aarch64"))]
             for (j, &mask) in masks.iter().enumerate() {
-                *self.array.get_unchecked_mut(block_idx + j) |= mask;
+                *block_ptr.add(j) |= mask;
             }
         }
     }
 
     #[inline]
     pub fn contains(&self, value: impl AsRef<[u8]>) -> bool {
-        let (h1, h2) = hash(value);
+        let (h1, h2) = hash(value.as_ref());
         let block_idx = (if self.block_mask != 0 {
             h1 & self.block_mask
         } else {
@@ -123,14 +192,21 @@ impl BlockedFilter {
 
         // SAFETY: same bound as insert.
         unsafe {
-            for (j, &mask) in masks.iter().enumerate() {
-                if *self.array.get_unchecked(block_idx + j) & mask != mask {
-                    return false;
+            let block_ptr = self.array.get_unchecked(block_idx) as *const u64;
+
+            #[cfg(target_arch = "aarch64")]
+            return neon_contains(block_ptr, &masks);
+
+            #[cfg(not(target_arch = "aarch64"))]
+            {
+                for (j, &mask) in masks.iter().enumerate() {
+                    if *block_ptr.add(j) & mask != mask {
+                        return false;
+                    }
                 }
+                true
             }
         }
-
-        true
     }
 
     /// Resets the filter to empty without reallocating.
